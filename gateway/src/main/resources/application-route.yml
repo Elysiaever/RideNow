@@ -1,0 +1,28 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: service-driver
+          uri: lb://service-driver
+          predicates:
+            - Path=/api/driver/**
+        - id: service-matching
+          uri: lb://service-matching
+          predicates:
+            - Path=/api/matching/**
+        - id: service-notification
+          uri: lb://service-notification
+          predicates:
+            - Path=/api/notification/**
+        - id: service-payment
+          uri: lb://service-payment
+          predicates:
+            - Path=/api/payment/**
+        - id: service-ride
+          uri: lb://service-ride
+          predicates:
+            - Path=/api/ride/**
+        - id: service-user
+          uri: lb://service-user
+          predicates:
+            - Path=/api/user/**

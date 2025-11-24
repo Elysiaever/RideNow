@@ -26,3 +26,12 @@ spring:
           uri: lb://service-user
           predicates:
             - Path=/api/user/**
+      globalcors:         # 跨域CORS配置
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: false  # 前后端域名不同必须 false
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Vary

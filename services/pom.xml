@@ -7,6 +7,8 @@
         <groupId>com.fth</groupId>
         <artifactId>RideNow</artifactId>
         <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+
     </parent>
 
     <packaging>pom</packaging>

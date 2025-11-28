@@ -24,7 +24,9 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- 升级Spring Cloud到2023.0.5（最新稳定版） -->
         <spring-cloud.version>2023.0.3</spring-cloud.version>
+        <!-- Spring Cloud Alibaba版本保持与Spring Cloud兼容（2023.0.3.2适配2023.0.x） -->
         <spring-cloud-alibaba.version>2023.0.3.2</spring-cloud-alibaba.version>
     </properties>
    <dependencyManagement>
@@ -42,6 +44,12 @@
                <version>${spring-cloud-alibaba.version}</version>
                <type>pom</type>
                 <scope>import</scope>
+           </dependency>
+
+           <dependency>
+               <groupId>com.fth</groupId>
+               <artifactId>common</artifactId>
+               <version>${project.version}</version> <!-- 与父工程版本一致（0.0.1-SNAPSHOT） -->
            </dependency>
        </dependencies>
    </dependencyManagement>

@@ -1,12 +1,3 @@
-<script setup lang="ts">
-
-</script>
-
 <template>
-  <h1>Let's ride now!</h1>
-  <p>
-    This is a Blank Page...
-  </p>
+  <router-view></router-view>
 </template>
-
-<style scoped></style>

@@ -6,7 +6,9 @@ spring:
       server-addr: 127.0.0.1:8848
       discovery:
         username: nacos
-        password: 1779614188
+        password: 1779614188  # 建议使用环境变量或配置中心存储敏感信息
+jwt:
+  secret: your-secure-jwt-secret-key  # 替换为安全的密钥
+  expire-minutes: 5
 server:
   port: 9005
-

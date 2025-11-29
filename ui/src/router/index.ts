@@ -6,26 +6,28 @@ import DriverDashboard from '../views/DriverDashboard.vue'
 import { useAuthStore } from '../stores/auth'
 import { ElMessage } from 'element-plus'  // 引入消息提示组件
 
-const routes = [
-  { path: '/', component: Home },
-  { path: '/login', component: Login },
-  {
-    path: '/passenger',
-    component: PassengerDashboard,
-    meta: { requiresAuth: true, role: 'PASSENGER' }
-  },
-  {
-    path: '/driver',
-    component: DriverDashboard,
-    meta: { requiresAuth: true, role: 'DRIVER' }
-  }
-]
-
 const router = createRouter({
-  history: createWebHistory(),
-  routes
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes = [
+    { path: '/', component: Home },
+    { path: '/login', component: Login },
+    {
+      path: '/passenger',
+      component: PassengerDashboard,
+      meta: { requiresAuth: true, role: 'PASSENGER' }
+    },
+    {
+      path: '/driver',
+      component: DriverDashboard,
+      meta: { requiresAuth: true, role: 'DRIVER' }
+    },
+    {
+      path: "/ride",
+      name: "Ride",
+      component: () => import("@/views/RideTest.vue")
+    },
+  ]
 })
-
 router.beforeEach((to, _from, next) => {
   const auth = useAuthStore()
 
@@ -47,5 +49,4 @@ router.beforeEach((to, _from, next) => {
 
   next()
 })
-
 export default router

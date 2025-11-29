@@ -6,7 +6,7 @@ spring:
       server-addr: 127.0.0.1:8848
       discovery:
         username: nacos
-        password: Cf1590753
+        password: Toosimple0531
 server:
   port: 9000
 

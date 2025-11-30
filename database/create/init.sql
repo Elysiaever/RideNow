@@ -7,7 +7,7 @@ CREATE TABLE t_user (
     updated_at      TIMESTAMP DEFAULT NOW()
 );
 
-COMMENT ON TABLE t_user IS '乘客用户表';
+C                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  OMMENT ON TABLE t_user IS '乘客用户表';
 
 COMMENT ON COLUMN t_user.id            IS '主键 ID';
 COMMENT ON COLUMN t_user.username      IS '用户名';

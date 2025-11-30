@@ -1,4 +1,4 @@
-package com.fth.ride.dto;
+package com.fth.ride.domain.dto;
 
 import lombok.Data;
 

@@ -1,6 +1,6 @@
 package com.fth.ride.mapper;
 
-import com.fth.ride.model.Ride;
+import com.fth.ride.domain.model.Ride;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

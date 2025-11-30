@@ -1,9 +1,8 @@
 package com.fth.ride.controller;
 
-import com.fth.ride.dto.RideResponse;
-import com.fth.ride.enums.RideStatus;
-import com.fth.ride.model.Ride;
-import com.fth.ride.dto.RideCreateRequest;
+import com.fth.ride.domain.dto.RideResponse;
+import com.fth.ride.domain.enums.RideStatus;
+import com.fth.ride.domain.dto.RideCreateRequest;
 import com.fth.ride.service.RideService;
 import com.fth.ride.service.impl.RideServiceImpl;
 import org.springframework.web.bind.annotation.*;

@@ -1,6 +1,6 @@
-package com.fth.ride.dto;
+package com.fth.ride.domain.dto;
 
-import com.fth.ride.model.Ride;
+import com.fth.ride.domain.model.Ride;
 import lombok.Data;
 
 import java.time.format.DateTimeFormatter;

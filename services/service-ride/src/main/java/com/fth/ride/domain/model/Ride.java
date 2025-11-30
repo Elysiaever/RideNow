@@ -1,8 +1,9 @@
-package com.fth.ride.model;
+package com.fth.ride.domain.model;
+
+import com.fth.ride.domain.enums.RideStatus;
+import lombok.Data;
 
 import java.time.LocalDateTime;
-import com.fth.ride.enums.RideStatus;
-import lombok.Data;
 
 @Data
 public class Ride {

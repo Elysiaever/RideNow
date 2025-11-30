@@ -1,4 +1,4 @@
-package com.fth.ride.enums;
+package com.fth.ride.domain.enums;
 
 public enum RideStatus {
     REQUESTED,     // 乘客提交请求待派单

@@ -23,7 +23,7 @@ const router = createRouter({
       meta: { requiresAuth: true, role: 'DRIVER' }
     },
     {
-      path: "/passenger",
+      path: "/ride",
       name: "Ride",
       component: () => import("@/views/RideTest.vue")
     },

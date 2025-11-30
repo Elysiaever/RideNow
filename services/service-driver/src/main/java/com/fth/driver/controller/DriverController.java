@@ -17,11 +17,6 @@ public class DriverController {
     @Autowired
     private DriverService driverService;
 
-    @GetMapping("/hello")
-    public String hello() {
-        return "Hello from Driver Service";
-    }
-
     @PutMapping("/updateLocation")
     public String updateLocation(@RequestBody LocationUpdateDto locationUpdateDto) {
         driverService.updateLocation(locationUpdateDto.getDriverId(), locationUpdateDto.getLng(), locationUpdateDto.getLat());
@@ -62,4 +57,15 @@ public class DriverController {
         return driverService.getDriverById(driverId);
     }
 
+    @PutMapping("/online")
+    public String driverOnline(@RequestBody LocationUpdateDto locationUpdateDto) {
+        driverService.driverOnline(locationUpdateDto.getDriverId(), locationUpdateDto.getLng(), locationUpdateDto.getLat());
+        return "Driver online";
+    }
+
+    @PutMapping("/offline")
+    public String driverOffline(Long driverId) {
+        driverService.driverOffline(driverId);
+        return "Driver offline";
+    }
 }

@@ -30,4 +30,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         return baseMapper.countByPhone(phone) > 0;
     }
+    //新增用户
+    @Override
+    public void addUser(User user) {
+        baseMapper.insert(user);
+    }
+
+    @Override
+    public void deleteUser(Long userId) {
+        baseMapper.deleteById(userId);
+    }
+
+    @Override
+    public void updateUser(User user) {
+        baseMapper.updateById(user);
+    }
+
+    @Override
+    public User getUserById(Long userId) {
+        return baseMapper.selectById(userId);
+    }
+
+
 }

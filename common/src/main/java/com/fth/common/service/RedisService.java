@@ -280,6 +280,7 @@ public class RedisService
 
     public void updateDriverLocation(Long driverId, double longitude, double latitude)
     {
+        driverOnline(driverId);
         updateLocation(RedisConstant.DRIVER_GEO_KEY, driverId.toString(), longitude, latitude);
     }
 
@@ -310,5 +311,17 @@ public class RedisService
                       return new Object();
                 })
                 .collect(Collectors.toList());
+    }
+
+    public boolean isDriverOnline(Long driverId) {
+        return redisTemplate.hasKey(RedisConstant.DRIVER_ONLINE_KEY + driverId.toString());
+    }
+
+    public void driverOnline(Long driverId) {
+        redisTemplate.opsForValue().set(RedisConstant.DRIVER_ONLINE_KEY + driverId.toString(), "online",5,TimeUnit.MINUTES);
+    }
+
+    public void driverOffline(Long driverId) {
+        redisTemplate.delete(RedisConstant.DRIVER_ONLINE_KEY + driverId.toString());
     }
 }

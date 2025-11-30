@@ -17,4 +17,10 @@ public interface DriverService {
     void updateDriver(Driver driver);
     //查询司机
     Driver getDriverById(Long driverId);
+
+    void driverOnline(Long driverId,double lng,double lat);
+
+    void driverOffline(Long driverId);
+
+    boolean isDriverOnline(Long driverId);
 }

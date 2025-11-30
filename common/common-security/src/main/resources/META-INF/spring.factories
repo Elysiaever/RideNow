@@ -1,5 +1,0 @@
-# src/main/resources/META-INF/spring.factories
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.fth.common.security.config.JwtAutoConfiguration,\
-com.fth.common.security.config.CommonSecurityConfig,\
-com.fth.common.security.exception.SecurityExceptionHandler

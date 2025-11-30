@@ -83,8 +83,9 @@
 
 <script lang="ts">
 import { defineComponent, ref, reactive, computed, nextTick } from 'vue'
-import { login, register } from '../api/user'
+import { login, register, getUserByUsername } from '../api/user'
 import { useAuthStore } from '../stores/auth'
+import { useUserStore } from '../stores/userStore'
 import router from '../router'
 import { ElMessage, ElIcon } from 'element-plus'
 import { Lock, User } from '@element-plus/icons-vue'
@@ -93,9 +94,13 @@ import type { FormInstance } from 'element-plus'
 export default defineComponent({
   components: { ElIcon, Lock, User },
   setup() {
+
+    // ❗❗❗ 正确的位置
+    const auth = useAuthStore()
+    const userStore = useUserStore()
+
     const formRef = ref<FormInstance>()
     const isLogin = ref(true)
-    const auth = useAuthStore()
 
     const loginLoading = ref(false)
     const registerLoading = ref(false)
@@ -107,7 +112,6 @@ export default defineComponent({
       confirmPassword: ''
     })
 
-    // 表单验证规则
     const rules = computed(() => ({
       username: [
         { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -122,7 +126,7 @@ export default defineComponent({
         : [
             { required: true, message: '请确认密码', trigger: 'blur' },
             {
-              validator: (rule: any, value: string, callback: any) => {
+              validator(rule: any, value: string, callback: any) {
                 if (value !== form.password) {
                   callback(new Error('两次输入的密码不一致'))
                 } else {
@@ -134,7 +138,6 @@ export default defineComponent({
           ]
     }))
 
-    // 切换登录/注册模式
     const toggleMode = () => {
       isLogin.value = !isLogin.value
       error.value = ''
@@ -142,7 +145,6 @@ export default defineComponent({
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
-    // 提交表单
     const submit = async () => {
       try {
         await formRef.value?.validate()
@@ -161,20 +163,26 @@ export default defineComponent({
         loginLoading.value = false
         registerLoading.value = false
         nextTick(() =>
-          document
-            .querySelector('.error-message')
-            ?.scrollIntoView({ behavior: 'smooth' })
+          document.querySelector('.error-message')?.scrollIntoView({ behavior: 'smooth' })
         )
       }
     }
 
     const handleLogin = async () => {
       const res = await login(form.username, form.password)
-      auth.setAuth(res.data.token)
+
+      auth.setAuth(res.data.data.token)
       ElMessage.success('登录成功，正在跳转...')
-  setTimeout(() => {
-    router.push('/ride')
-  }, 80)    }
+
+      const userResp = await getUserByUsername(form.username)
+      if (userResp.data && userResp.data.data) {
+        userStore.setUserInfo(userResp.data.data)
+      }
+
+      setTimeout(() => {
+        router.push('/ride')
+      }, 80)
+    }
 
     const handleRegister = async () => {
       await register(form.username, form.password)
@@ -182,7 +190,9 @@ export default defineComponent({
       toggleMode()
     }
 
-    const loading = computed(() => (isLogin.value ? loginLoading.value : registerLoading.value))
+    const loading = computed(() =>
+      isLogin.value ? loginLoading.value : registerLoading.value
+    )
 
     return {
       form,

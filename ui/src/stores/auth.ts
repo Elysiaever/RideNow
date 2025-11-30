@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
+// 导入 request.ts 中的自定义 axios 实例，而非全局 axios
+import request from '../utils/request'
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -14,16 +15,18 @@ export const useAuthStore = defineStore('auth', {
         setAuth(token: string) {
             this.token = token
             localStorage.setItem('token', token)
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+            // 改为给自定义 request 实例设置默认 headers
+            request.defaults.headers.common['Authorization'] = `Bearer ${token}`
         },
 
         logout() {
             this.token = null
             localStorage.removeItem('token')
-            delete axios.defaults.headers.common['Authorization']
+            // 同时清除自定义实例的 Authorization 头
+            delete request.defaults.headers.common['Authorization']
         },
 
-        // 判断 token 是否过期
+        // 判断 token 是否过期（保持不变）
         isTokenExpired(): boolean {
             if (!this.token) return true
             try {
@@ -35,6 +38,5 @@ export const useAuthStore = defineStore('auth', {
                 return true
             }
         }
-
     }
 })

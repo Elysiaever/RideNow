@@ -6,14 +6,16 @@ import com.fth.user.domain.dto.LoginResponse;
 
 import com.fth.user.domain.dto.RegisterRequest;
 import com.fth.user.domain.dto.RegisterResponse;
+import com.fth.user.domain.model.User;
 import com.fth.user.service.LoginService;
 import com.fth.user.service.RegisterService;
+import com.fth.user.service.UserService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 
 /**
@@ -26,10 +28,12 @@ public class LoginController {
 
     private final LoginService loginService;
     private final RegisterService registerService;
+    private final UserService userService;
 
-    public LoginController(LoginService loginService, RegisterService registerService) {
+    public LoginController(LoginService loginService, RegisterService registerService, UserService userService) {
         this.loginService = loginService;
         this.registerService = registerService;
+        this.userService = userService;
     }
 
     /**
@@ -50,4 +54,12 @@ public class LoginController {
         return Response.success(response);
     }
 
+    @GetMapping("/getUserByUsername")
+    public Response getUserByUsername(@RequestParam String username) {
+        Optional<User> user = userService.getByUsername(username);
+        if (user.isEmpty()) {
+            return Response.error(404, "用户不存在");
+        }
+        return Response.success(user);
+    }
 }

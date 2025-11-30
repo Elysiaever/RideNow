@@ -41,7 +41,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, reactive } from 'vue'
-import { login } from '../services/auth'
+import { login } from '../api/login'
 import { useAuthStore } from '../stores/auth'
 import router from '../router'
 import type { FormInstance } from 'element-plus'

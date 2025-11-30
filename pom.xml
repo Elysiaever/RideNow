@@ -18,6 +18,7 @@
         <module>services</module>
         <module>gateway</module>
         <module>common</module>
+        <module>common/common-security</module>
     </modules>
 
     <properties>

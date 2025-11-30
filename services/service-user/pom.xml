@@ -77,6 +77,11 @@
             </exclusions>
         </dependency>
 
+        <dependency>
+            <groupId>com.fth</groupId>
+            <artifactId>common-security</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
 

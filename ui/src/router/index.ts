@@ -8,21 +8,22 @@ import { ElMessage } from 'element-plus'  // 引入消息提示组件
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes = [
+  routes: [
     { path: '/', component: Home },
     { path: '/login', component: Login },
-    {
-      path: '/passenger',
-      component: PassengerDashboard,
-      meta: { requiresAuth: true, role: 'PASSENGER' }
-    },
+    // {
+    //   path: '/passenger',
+    //   component: PassengerDashboard,
+    //   meta: { requiresAuth: true, role: 'PASSENGER' }
+    // },
+
     {
       path: '/driver',
       component: DriverDashboard,
       meta: { requiresAuth: true, role: 'DRIVER' }
     },
     {
-      path: "/ride",
+      path: "/passenger",
       name: "Ride",
       component: () => import("@/views/RideTest.vue")
     },

@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>common</artifactId>
+    <packaging>pom</packaging> <!-- common 是父模块，类型为 pom -->
 
     <dependencies>
         <dependency>

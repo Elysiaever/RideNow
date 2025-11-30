@@ -1,10 +1,5 @@
 // src/api/ride.ts
-import axios from "axios";
-
-const http = axios.create({
-  baseURL: "http://localhost:80",
-  timeout: 5000,
-});
+import request from '../utils/request'
 
 // Ride 创建请求 DTO
 export interface CreateRideDto {
@@ -27,15 +22,17 @@ export interface Ride {
 
 // 创建行程
 export function createRide(data: CreateRideDto) {
-  return http.post<Ride>("/api/ride/create", data);
+  return request.post<Ride>("/api/ride/create", data);
 }
 
+// 获取历史行程
 export function getHistoryRidesByPassengerId(passengerId: string) {
-  return http.get<Ride[]>("/api/ride/history/" + passengerId);
+  return request.get<Ride[]>(`/api/ride/history/${passengerId}`);
 }
 
+// 更新行程状态
 export function updateRideStatus(rideId: string, status: string) {
-  return http.post<Ride>("/api/ride/change-status", null, {
+  return request.post<Ride>("/api/ride/change-status", null, {
     params: { rideId, status }
   });
 }

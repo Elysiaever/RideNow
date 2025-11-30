@@ -32,8 +32,10 @@ public class RideServiceImpl implements RideService {
         // 经纬度存储（假设你已经改成 double 类型）
         ride.setOriginLat(req.getOriginLat());
         ride.setOriginLng(req.getOriginLng());
+        ride.setOriginAddress(req.getOriginAddress());
         ride.setDestLat(req.getDestLat());
         ride.setDestLng(req.getDestLng());
+        ride.setDestAddress(req.getDestAddress());
 
         // 基础状态初始化
         ride.setStatus("REQUESTED");

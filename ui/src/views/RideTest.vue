@@ -1,36 +1,42 @@
 <template>
   <div class="page">
-    <BaiduMap ref="baiduMap" @pick-point="onPickPoint" />
+    <BaiduMap ref="baiduMap" :pickMode="pickMode" @pick-point="onPickPoint" />
 
     <div class="bottom-panel">
       <el-form :model="form" label-width="90px" class="form">
-
+        
         <el-form-item label="乘客ID">
-          <el-input v-model="form.passengerId" />
+          <el-input
+          style="width:90%" 
+          v-model="form.passengerId" />
         </el-form-item>
 
-        <!-- 出发地（纯经纬度输入） -->
+        <!-- 出发地（绿色） -->
         <el-form-item label="出发地">
           <el-input
-              v-model="form.origin.raw"
-              placeholder="格式：经度,纬度 例如：121.5233,31.2456"
-              clearable
+            v-model="form.origin.display"
+            placeholder="点击地图选择出发地"
+            clearable
+            style="width:75%"
+            @focus="pickMode = 'origin'"
           />
+          <el-button type="primary" @click="locateOrigin">定位</el-button>
         </el-form-item>
 
-        <!-- 目的地（纯经纬度输入） -->
+        <!-- 目的地（红色） -->
         <el-form-item label="目的地">
           <el-input
-              v-model="form.destination.raw"
-              placeholder="格式：经度,纬度 或点击地图选择"
-              clearable
-              style="width:80%"
+            v-model="form.destination.display"
+            placeholder="点击地图选择目的地"
+            clearable
+            style="width:75%"
+            @focus="pickMode = 'destination'"
           />
           <el-button type="primary" @click="locateDestination">定位</el-button>
         </el-form-item>
 
         <el-button type="primary" @click="submitForm" class="submit-btn">
-          提交行程
+          开始叫车
         </el-button>
 
       </el-form>
@@ -44,98 +50,96 @@ import { ElMessage } from "element-plus";
 import BaiduMap from "@/components/BaiduMap.vue";
 import request from "@/utils/request";
 
-// ==========================
-// 🌍 只保留“字符串”形式的经纬度
-// ==========================
+// 地图组件引用
+const baiduMap = ref<any>(null);
+
+// 当前地点拾取模式
+const pickMode = ref<"origin" | "destination">("origin");
+
+// 表单数据
 const form = reactive({
   passengerId: "",
   origin: {
-    raw: "", // "121.5233,31.2456"
+    display: "",
+    lng: null as number | null,
+    lat: null as number | null
   },
   destination: {
-    raw: "",
-  },
+    display: "",
+    lng: null as number | null,
+    lat: null as number | null
+  }
 });
 
-// 获取子组件
-const baiduMap = ref<any>(null);
+// 地图点击回调
+const onPickPoint = (p: { lng: number; lat: number; address: string; mode: string }) => {
+  if (p.mode === "origin") {
+    form.origin = {
+      display: p.address,
+      lng: p.lng,
+      lat: p.lat
+    };
+  } else {
+    form.destination = {
+      display: p.address,
+      lng: p.lng,
+      lat: p.lat
+    };
+  }
 
-// ==========================
-// 📌 点击地图 → 自动写入 "lng,lat"
-// ==========================
-const onPickPoint = async (p: { lng: number; lat: number }) => {
-  const lngLatStr = `${p.lng.toFixed(6)},${p.lat.toFixed(6)}`;
-  form.destination.raw = lngLatStr;
-
-  ElMessage.success(`已选择坐标：${lngLatStr}`);
+  ElMessage.success(`已选择：${p.address}`);
 };
 
-// ==========================
-// 📍 定位输入框 → 地图
-// ==========================
+// 定位出发地
+const locateOrigin = () => {
+  if (!form.origin.display) {
+    ElMessage.warning("请输入出发地地址");
+    return;
+  }
+  baiduMap.value?.locatePoint({
+    address: form.origin.display,
+    type: "origin",
+  });
+};
+
+// 定位目的地
 const locateDestination = () => {
-  if (!form.destination.raw) {
-    ElMessage.warning("请输入经纬度，例如：121.5233,31.2456");
+  if (!form.destination.display) {
+    ElMessage.warning("请输入目的地地址");
     return;
   }
-
-  const [lngStr, latStr] = form.destination.raw.split(",");
-  const lng = parseFloat(lngStr);
-  const lat = parseFloat(latStr);
-
-  if (isNaN(lng) || isNaN(lat)) {
-    ElMessage.error("请输入合法格式：经度,纬度");
-    return;
-  }
-
-  baiduMap.value?.locatePoint({ lng, lat });
+  baiduMap.value?.locatePoint({
+    address: form.destination.display,
+    type: "destination",
+  });
 };
 
-// ==========================
-// 🧩 工具函数：解析经纬度
-// ==========================
-function parseLngLat(raw: string) {
-  const arr = raw.split(",");
-  if (arr.length !== 2) return null;
-  const lng = parseFloat(arr[0]);
-  const lat = parseFloat(arr[1]);
-  if (isNaN(lng) || isNaN(lat)) return null;
-  return { lng, lat };
-}
-
-// ==========================
-// 🚗 表单提交 → 后端
-// ==========================
+// 提交行程
 const submitForm = async () => {
-  if (!form.passengerId || !form.origin.raw || !form.destination.raw) {
-    ElMessage.warning("请填写完整信息");
+  if (!form.passengerId) {
+    ElMessage.warning("请输入乘客ID");
     return;
   }
-
-  const origin = parseLngLat(form.origin.raw);
-  const dest = parseLngLat(form.destination.raw);
-
-  if (!origin || !dest) {
-    ElMessage.error("经纬度格式错误，请使用：121.5233,31.2456");
+  if (!form.origin.lng || !form.destination.lng) {
+    ElMessage.error("请先选择出发地和目的地");
     return;
   }
 
   try {
-    const res = await request.post("/api/ride/create", {
+    await request.post("/api/ride/create", {
       passengerId: form.passengerId,
-
-      originLng: origin.lng,
-      originLat: origin.lat,
-
-      destLng: dest.lng,
-      destLat: dest.lat,
+      originAddress: form.origin.display,
+      originLng: form.origin.lng,
+      originLat: form.origin.lat,
+      destAddress: form.destination.display,
+      destLng: form.destination.lng,
+      destLat: form.destination.lat
     });
 
     ElMessage.success("行程创建成功！");
-    console.log("后端返回：", res.data);
-
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
+    ElMessage.error("提交失败");
   }
 };
 </script>
@@ -146,20 +150,17 @@ const submitForm = async () => {
   height: 100vh;
   position: relative;
 }
-
 .bottom-panel {
   position: absolute;
   bottom: 0;
   width: 100%;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255,255,255,0.92);
   padding: 20px 10px;
 }
-
 .form {
   max-width: 650px;
   margin: auto;
 }
-
 .submit-btn {
   width: 100%;
   margin-top: 10px;

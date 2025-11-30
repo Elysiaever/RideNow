@@ -10,8 +10,10 @@ public class RideResponse {
     private String rideId;
     private String passengerId;
     private String driverId;
+    private String orginAddress;
     private double originLat;
     private double originLng;
+    private String destAddress;
     private double destLat;
     private double destLng;
     private String requestTime;
@@ -27,8 +29,10 @@ public class RideResponse {
         resp.setRideId(r.getRideId());
         resp.setPassengerId(r.getPassengerId());
         resp.setDriverId(r.getDriverId());
+        resp.setOrginAddress(r.getOriginAddress());
         resp.setOriginLat(r.getOriginLat());
         resp.setOriginLng(r.getOriginLng());
+        resp.setDestAddress(r.getDestAddress());
         resp.setDestLat(r.getDestLat());
         resp.setDestLng(r.getDestLng());
         resp.setStatus(r.getStatus());

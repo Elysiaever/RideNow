@@ -17,8 +17,10 @@ public class Ride {
     // ===== 位置描述 =====
     private double originLat;
     private double originLng;
+    private String originAddress;
     private double destLat;
     private double destLng;
+    private String destAddress;
 
     // ===== 多阶段时间 =====
     private LocalDateTime requestTime; // 乘客发起请求时间

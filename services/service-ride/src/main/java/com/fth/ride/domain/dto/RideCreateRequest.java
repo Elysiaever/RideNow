@@ -8,6 +8,8 @@ import lombok.Data;
 @Data
 public class RideCreateRequest {
     private String passengerId;
-    private String origin;
-    private String destination;
+    private double originLat;
+    private double originLng;
+    private double destLat;
+    private double destLng;
 }

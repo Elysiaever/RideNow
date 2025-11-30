@@ -1,11 +1,12 @@
 package com.fth.ride.domain.model;
 
-import com.fth.ride.domain.enums.RideStatus;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
+@TableName("t_ride")
 public class Ride {
 
     // ===== 基础信息 =====
@@ -14,8 +15,10 @@ public class Ride {
     private String driverId;
 
     // ===== 位置描述 =====
-    private String origin;
-    private String destination;
+    private double originLat;
+    private double originLng;
+    private double destLat;
+    private double destLng;
 
     // ===== 多阶段时间 =====
     private LocalDateTime requestTime; // 乘客发起请求时间
@@ -24,7 +27,7 @@ public class Ride {
     private LocalDateTime endTime;     // 行程结束时间
 
     // ===== 状态 =====
-    private RideStatus status;
+    private String status;
 
     // ===== 计费/统计数据 =====
     private double distance;  // 行程里程（km）
@@ -36,15 +39,17 @@ public class Ride {
 
     public Ride(String rideId,
                 String passengerId,
-                String origin,
-                String destination) {
-
+                double originLat,
+                double originLng,
+                double destLat,
+                double destLng) {
         this.rideId = rideId;
         this.passengerId = passengerId;
-        this.origin = origin;
-        this.destination = destination;
-
-        this.status = RideStatus.REQUESTED;
+        this.originLat = originLat;
+        this.originLng = originLng;
+        this.destLat = destLat;
+        this.destLng = destLng;
+        this.status = "REQUESTED";
         this.requestTime = LocalDateTime.now();
     }
 

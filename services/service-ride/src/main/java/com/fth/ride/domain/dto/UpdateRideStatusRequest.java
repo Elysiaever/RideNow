@@ -1,6 +1,5 @@
 package com.fth.ride.domain.dto;
 
-import com.fth.ride.domain.enums.RideStatus;
 import lombok.Data;
 
 /**
@@ -9,6 +8,6 @@ import lombok.Data;
 @Data
 public class UpdateRideStatusRequest {
     private String rideId;
-    private RideStatus status;
+    private String status;
     private String reason; // 若取消，可以填写取消原因
 }

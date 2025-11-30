@@ -1,37 +1,42 @@
 <template>
   <div class="page">
-    <!-- 全屏地图 -->
-    <BaiduMap ref="baiduMap" @pick-point="onPickPoint" />
+    <BaiduMap ref="baiduMap" :pickMode="pickMode" @pick-point="onPickPoint" />
 
-    <!-- 底部悬浮输入栏 -->
     <div class="bottom-panel">
       <el-form :model="form" label-width="90px" class="form">
+        
         <el-form-item label="乘客ID">
-          <el-input v-model="form.passengerId" />
+          <el-input style="width:90%" v-model="form.passengerId" />
         </el-form-item>
 
+        <!-- 出发地（绿色） -->
         <el-form-item label="出发地">
-          <el-autocomplete
-            v-model="form.origin"
-            :fetch-suggestions="searchPoi"
-            placeholder="输入地址或点击地图选择"
+          <el-input
+            v-model="form.origin.display"
+            placeholder="点击地图选择出发地"
             clearable
+            style="width:75%"
+            @focus="pickMode = 'origin'"
           />
+          <el-button type="primary" @click="locateOrigin">定位</el-button>
         </el-form-item>
 
+        <!-- 目的地（红色） -->
         <el-form-item label="目的地">
           <el-input
-            v-model="form.destination"
-            placeholder="输入目的地"
+            v-model="form.destination.display"
+            placeholder="点击地图选择目的地"
             clearable
-            style="width: 80%;"
+            style="width:75%"
+            @focus="pickMode = 'destination'"
           />
           <el-button type="primary" @click="locateDestination">定位</el-button>
         </el-form-item>
 
         <el-button type="primary" @click="submitForm" class="submit-btn">
-          提交行程
+          开始叫车
         </el-button>
+
       </el-form>
     </div>
   </div>
@@ -41,68 +46,118 @@
 import { reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import BaiduMap from "@/components/BaiduMap.vue";
+import request from "@/utils/request";
 
-const form = reactive({
-  passengerId: "",
-  origin: "",
-  destination: "",
-});
-
-// 获取 BaiduMap 子组件引用
+// 地图组件引用
 const baiduMap = ref<any>(null);
 
-// 点击地图，得到经纬度
-const onPickPoint = async (p: { lng: number; lat: number }) => {
-  // 调用子组件的逆地理编码函数
-  const address = await baiduMap.value?.getAddressFromPoint(p);
-  if (address) {
-    form.destination = address;
-    ElMessage.success(`已选择地图位置: ${address}`);
+// 当前地点拾取模式
+const pickMode = ref<"origin" | "destination">("origin");
+
+// 表单数据
+const form = reactive({
+  passengerId: "",
+  origin: {
+    display: "",
+    lng: null as number | null,
+    lat: null as number | null
+  },
+  destination: {
+    display: "",
+    lng: null as number | null,
+    lat: null as number | null
+  }
+});
+
+// 地图点击回调
+const onPickPoint = (p: { lng: number; lat: number; address: string; mode: string }) => {
+  if (p.mode === "origin") {
+    form.origin = {
+      display: p.address,
+      lng: p.lng,
+      lat: p.lat
+    };
   } else {
-    form.destination = `${p.lng.toFixed(6)},${p.lat.toFixed(6)}`;
-    ElMessage.warning("未找到该地址，使用坐标填充");
+    form.destination = {
+      display: p.address,
+      lng: p.lng,
+      lat: p.lat
+    };
   }
+
+  ElMessage.success(`已选择：${p.address}`);
 };
 
-// 百度地点搜索 suggestion API
-const searchPoi = async (query: string, cb: any) => {
-  if (!query) return cb([]);
-  const ak = import.meta.env.VITE_BAIDU_MAP_AK;
-  const url = `https://api.map.baidu.com/place/v2/suggestion?query=${encodeURIComponent(
-    query
-  )}&region=全国&city_limit=false&output=json&ak=${ak}`;
+// 定位出发地
+const locateOrigin = async () => {
+  if (!form.origin.display) {
+    ElMessage.warning("请输入出发地地址");
+    return;
+  }
   try {
-    const res = await fetch(url);
-    const json = await res.json();
-    const list =
-      json.result?.map((item: any) => ({
-        value: item.name,
-        address: `${item.city || ""}${item.district || ""}`,
-        location: item.location,
-      })) ?? [];
-    cb(list);
+    const p = await baiduMap.value.locatePoint({ address: form.origin.display, type: "origin" });
+    form.origin.lng = p.lng;
+    form.origin.lat = p.lat;
   } catch (err) {
-    console.error("POI 搜索失败：", err);
-    cb([]);
+    ElMessage.error("定位失败：" + err);
   }
 };
 
-// 定位目的地按钮点击
-const locateDestination = () => {
-  if (!form.destination) {
-    ElMessage.warning("请输入目的地");
+// 定位目的地
+const locateDestination = async () => {
+  if (!form.destination.display) {
+    ElMessage.warning("请输入目的地地址");
     return;
   }
-  baiduMap.value?.locatePoint({ address: form.destination });
+  try {
+    const p = await baiduMap.value.locatePoint({ address: form.destination.display, type: "destination" });
+    form.destination.lng = p.lng;
+    form.destination.lat = p.lat;
+  } catch (err) {
+    ElMessage.error("定位失败：" + err);
+  }
 };
 
-// 表单提交
-const submitForm = () => {
-  if (!form.passengerId || !form.origin || !form.destination) {
-    ElMessage.warning("请填写完整信息");
+// 提交行程
+const submitForm = async () => {
+  if (!form.passengerId) {
+    ElMessage.warning("请输入乘客ID");
     return;
   }
-  ElMessage.success("行程创建成功（示例）");
+
+  try {
+    // 自动定位输入框地址（如果经纬度为空）
+    if (!form.origin.lng && form.origin.display) {
+      const p = await baiduMap.value.locatePoint({ address: form.origin.display, type: "origin" });
+      form.origin.lng = p.lng;
+      form.origin.lat = p.lat;
+    }
+    if (!form.destination.lng && form.destination.display) {
+      const p = await baiduMap.value.locatePoint({ address: form.destination.display, type: "destination" });
+      form.destination.lng = p.lng;
+      form.destination.lat = p.lat;
+    }
+
+    if (!form.origin.lng || !form.destination.lng) {
+      ElMessage.error("请先选择出发地和目的地");
+      return;
+    }
+
+    await request.post("/api/ride/create", {
+      passengerId: form.passengerId,
+      originAddress: form.origin.display,
+      originLng: form.origin.lng,
+      originLat: form.origin.lat,
+      destAddress: form.destination.display,
+      destLng: form.destination.lng,
+      destLat: form.destination.lat
+    });
+
+    ElMessage.success("行程创建成功！");
+  } catch (err) {
+    console.error(err);
+    ElMessage.error("提交失败：" + err);
+  }
 };
 </script>
 
@@ -112,22 +167,17 @@ const submitForm = () => {
   height: 100vh;
   position: relative;
 }
-
 .bottom-panel {
   position: absolute;
   bottom: 0;
   width: 100%;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(6px);
+  background: rgba(255,255,255,0.92);
   padding: 20px 10px;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
 }
-
 .form {
   max-width: 650px;
   margin: auto;
 }
-
 .submit-btn {
   width: 100%;
   margin-top: 10px;

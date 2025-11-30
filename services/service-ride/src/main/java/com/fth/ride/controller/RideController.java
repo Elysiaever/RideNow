@@ -1,7 +1,6 @@
 package com.fth.ride.controller;
 
 import com.fth.ride.domain.dto.RideResponse;
-import com.fth.ride.domain.enums.RideStatus;
 import com.fth.ride.domain.dto.RideCreateRequest;
 import com.fth.ride.service.RideService;
 import com.fth.ride.service.impl.RideServiceImpl;
@@ -16,7 +15,11 @@ import java.util.List;
 @RequestMapping("api/ride")
 public class RideController {
 
-    private final RideService rideService = new RideServiceImpl();
+    private final RideService rideService;
+
+    public RideController(RideService rideService) {
+        this.rideService = rideService; // Spring 注入
+    }
 
     /**
      * 创建新行程
@@ -40,7 +43,7 @@ public class RideController {
      */
     @PostMapping("/change-status")
     public RideResponse updateStatus(@RequestParam String rideId,
-                                     @RequestParam RideStatus status) {
+                                     @RequestParam String status) {
         return rideService.updateRideStatus(rideId, status);
     }
 

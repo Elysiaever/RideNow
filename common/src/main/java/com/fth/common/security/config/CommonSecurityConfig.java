@@ -1,6 +1,8 @@
 package com.fth.common.security.config;
 
 import com.fth.common.security.filter.JwtAuthenticationFilter;
+import com.fth.common.security.handler.CustomAccessDeniedHandler;
+import com.fth.common.security.handler.CustomAuthenticationEntryPoint;
 import com.fth.common.security.jwt.JwtTokenProvider;
 import com.fth.common.security.util.TokenExtractUtils;
 import org.springframework.context.annotation.Bean;
@@ -19,10 +21,17 @@ public class CommonSecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenExtractUtils tokenExtractUtils;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
 
-    public CommonSecurityConfig(JwtTokenProvider jwtTokenProvider, TokenExtractUtils tokenExtractUtils) {
+    public CommonSecurityConfig(JwtTokenProvider jwtTokenProvider,
+                                TokenExtractUtils tokenExtractUtils,
+                                CustomAuthenticationEntryPoint authenticationEntryPoint,
+                                CustomAccessDeniedHandler accessDeniedHandler) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.tokenExtractUtils = tokenExtractUtils;
+        this.authenticationEntryPoint = authenticationEntryPoint;
+        this.accessDeniedHandler = accessDeniedHandler;
     }
 
     /**
@@ -53,11 +62,16 @@ public class CommonSecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                // 配置URL访问规则（子模块可重写此方法扩展）
+                // 配置URL访问规则
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/login", "/api/user/register").permitAll() // 公开接口
-                        .requestMatchers("/actuator/**").permitAll() // 监控接口
-                        .anyRequest().authenticated() // 其他接口需认证
+                        .requestMatchers("/api/user/login", "/api/user/register").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                // 自定义异常处理
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authenticationEntryPoint) // 未登录或Token无效
+                        .accessDeniedHandler(accessDeniedHandler)             // 权限不足
                 )
                 // 添加JWT过滤器（在用户名密码过滤器之前执行）
                 .addFilterBefore(

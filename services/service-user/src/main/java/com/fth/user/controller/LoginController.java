@@ -1,5 +1,6 @@
 package com.fth.user.controller;
 
+import com.fth.common.api.Response;
 import com.fth.user.domain.dto.LoginRequest;
 import com.fth.user.domain.dto.LoginResponse;
 
@@ -35,17 +36,18 @@ public class LoginController {
      * 用户登录接口
      */
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+    public Response<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = loginService.login(request);
-        return ResponseEntity.ok(response);
+        return Response.success(response);
     }
 
     /**
      * 用户注册接口
      */
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public Response<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         RegisterResponse response = registerService.register(request);
-        return ResponseEntity.ok(response);
+        return Response.success(response);
     }
+
 }

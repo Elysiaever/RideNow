@@ -1,45 +1,80 @@
 <template>
-  <div class="page">
+  <div class="page-container">
+    <!-- 背景装饰 -->
+    <div class="background-decoration"></div>
+
     <el-card class="login-card" :header="isLogin ? '用户登录' : '用户注册'">
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
+      <div class="card-header-icon">
+  <el-icon :size="36" :component="isLogin ? Lock : User" />
+      </div>
+
+      <el-form
+        :model="form"
+        :rules="rules"
+        ref="formRef"
+        label-width="80px"
+        class="login-form"
+      >
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" placeholder="请输入用户名" />
+          <el-input
+            v-model="form.username"
+            placeholder="请输入用户名"
+            prefix-icon="User"
+            clearable
+          />
         </el-form-item>
-        
+
         <el-form-item label="密码" prop="password">
-          <el-input 
-            v-model="form.password" 
-            type="password" 
-            placeholder="请输入密码" 
+          <el-input
+            v-model="form.password"
+            type="password"
+            placeholder="请输入密码"
+            prefix-icon="Lock"
+            clearable
+            show-password
           />
         </el-form-item>
-        
-        <!-- 注册时显示确认密码 -->
-        <el-form-item label="确认密码" prop="confirmPassword" v-if="!isLogin">
-          <el-input 
-            v-model="form.confirmPassword" 
-            type="password" 
-            placeholder="请确认密码" 
+
+        <el-form-item
+          label="确认密码"
+          prop="confirmPassword"
+          v-if="!isLogin"
+        >
+          <el-input
+            v-model="form.confirmPassword"
+            type="password"
+            placeholder="请确认密码"
+            prefix-icon="Lock"
+            clearable
+            show-password
           />
         </el-form-item>
-        
-        <el-form-item>
-          <el-button type="primary" @click="submit" :loading="loading">
+
+        <!-- 错误提示 -->
+        <el-form-item v-if="error" class="error-message">
+          <el-alert
+            :description="error"
+            type="error"
+            show-icon
+            :closable="false"
+            effect="light"
+          />
+        </el-form-item>
+
+        <el-form-item class="form-actions">
+          <el-button
+            type="primary"
+            @click="submit"
+            :loading="loading"
+            class="main-action-btn"
+            :disabled="loading"
+          >
             {{ isLogin ? '登录' : '注册' }}
           </el-button>
-          <el-button style="margin-left: 10px" @click="toggleMode">
+
+          <el-button text @click="toggleMode" :disabled="loading">
             {{ isLogin ? '没有账号？去注册' : '已有账号？去登录' }}
           </el-button>
-        </el-form-item>
-        
-        <el-form-item v-if="error" style="margin-bottom: 0">
-          <el-alert 
-            :title="isLogin ? '登录失败' : '注册失败'" 
-            :description="error" 
-            type="error" 
-            show-icon 
-            :closable="false" 
-          />
         </el-form-item>
       </el-form>
     </el-card>
@@ -47,21 +82,24 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive, computed } from 'vue'
-import { login } from '../api/user'
-import { register } from '../api/user'
+import { defineComponent, ref, reactive, computed, nextTick } from 'vue'
+import { login, register } from '../api/user'
 import { useAuthStore } from '../stores/auth'
 import router from '../router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElIcon } from 'element-plus'
+import { Lock, User } from '@element-plus/icons-vue'
 import type { FormInstance } from 'element-plus'
 
 export default defineComponent({
+  components: { ElIcon, Lock, User },
   setup() {
     const formRef = ref<FormInstance>()
-    const loading = ref(false)
-    const error = ref('')
-    const auth = useAuthStore()
     const isLogin = ref(true)
+    const auth = useAuthStore()
+
+    const loginLoading = ref(false)
+    const registerLoading = ref(false)
+    const error = ref('')
 
     const form = reactive({
       username: '',
@@ -69,81 +107,176 @@ export default defineComponent({
       confirmPassword: ''
     })
 
+    // 表单验证规则
     const rules = computed(() => ({
-      username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-      password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-      confirmPassword: isLogin.value ? [] : [
-        { required: true, message: '请确认密码', trigger: 'blur' },
-        { 
-          validator: (rule: any, value: string, callback: any) => {
-            if (value !== form.password) {
-              callback(new Error('两次输入的密码不一致'))
-            } else {
-              callback()
+      username: [
+        { required: true, message: '请输入用户名', trigger: 'blur' },
+        { min: 3, max: 20, message: '用户名长度在 3-20 个字符之间', trigger: 'blur' }
+      ],
+      password: [
+        { required: true, message: '请输入密码', trigger: 'blur' },
+        { min: 6, max: 20, message: '密码长度在 6-20 个字符之间', trigger: 'blur' }
+      ],
+      confirmPassword: isLogin.value
+        ? []
+        : [
+            { required: true, message: '请确认密码', trigger: 'blur' },
+            {
+              validator: (rule: any, value: string, callback: any) => {
+                if (value !== form.password) {
+                  callback(new Error('两次输入的密码不一致'))
+                } else {
+                  callback()
+                }
+              },
+              trigger: 'blur'
             }
-          },
-          trigger: 'blur'
-        }
-      ]
+          ]
     }))
 
+    // 切换登录/注册模式
     const toggleMode = () => {
       isLogin.value = !isLogin.value
       error.value = ''
       formRef.value?.resetFields()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
+    // 提交表单
     const submit = async () => {
       try {
         await formRef.value?.validate()
-        loading.value = true
         error.value = ''
-        
         if (isLogin.value) {
-          // 登录逻辑 - 登录成功后跳转到Ride页面
-          const res = await login(form.username, form.password)
-          auth.setAuth({
-            token: res.data.token,
-            roles: res.data.roles || []
-          })
-          // 直接跳转到行程页面，不分角色
-          router.push('/ride')
+          loginLoading.value = true
+          await handleLogin()
         } else {
-          // 注册逻辑
-          const res = await register(form.username, form.password)
-          if (res.data.success) {
-            ElMessage.success('注册成功，请登录')
-            toggleMode()
-          }
+          registerLoading.value = true
+          await handleRegister()
         }
       } catch (err: any) {
-        if (err.name === 'Error') {
-          error.value = isLogin.value ? '用户名或密码错误' : '注册失败，请检查信息'
-        } else if (err.message) {
-          error.value = err.message
-        }
+        error.value =
+          err.response?.data?.message || err.message || (isLogin.value ? '登录失败' : '注册失败')
       } finally {
-        loading.value = false
+        loginLoading.value = false
+        registerLoading.value = false
+        nextTick(() =>
+          document
+            .querySelector('.error-message')
+            ?.scrollIntoView({ behavior: 'smooth' })
+        )
       }
     }
 
-    return { 
-      form, 
-      rules, 
-      formRef, 
-      loading, 
-      error, 
+    const handleLogin = async () => {
+      const res = await login(form.username, form.password)
+      auth.setAuth(res.data.token)
+      ElMessage.success('登录成功，正在跳转...')
+  setTimeout(() => {
+    router.push('/ride')
+  }, 80)    }
+
+    const handleRegister = async () => {
+      await register(form.username, form.password)
+      ElMessage.success('注册成功，请登录')
+      toggleMode()
+    }
+
+    const loading = computed(() => (isLogin.value ? loginLoading.value : registerLoading.value))
+
+    return {
+      form,
+      rules,
+      formRef,
+      loading,
+      error,
       submit,
       isLogin,
-      toggleMode
+      toggleMode,
+      Lock,
+      User
     }
   }
 })
 </script>
 
 <style scoped>
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: #f5f7fa;
+  position: relative;
+}
+
+.background-decoration {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(64, 158, 255, 0.1) 0%, transparent 40%),
+              radial-gradient(circle at 70% 60%, rgba(64, 158, 255, 0.1) 0%, transparent 40%);
+  z-index: 0;
+}
+
 .login-card {
-  max-width: 400px;
-  margin: 50px auto;
+  max-width: 420px;
+  width: 100%;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.card-header-icon {
+  font-size: 36px;
+  color: #409eff;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.login-form {
+  padding: 0 30px 30px;
+}
+
+.error-message {
+  margin-bottom: 15px;
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.main-action-btn {
+  width: 100%;
+  border-radius: 8px;
+}
+
+/* 移动端适配 */
+@media (max-width: 576px) {
+  .login-card {
+    margin: 10px auto;
+    min-height: 440px;
+  }
+  .login-form {
+    padding: 10px 15px 20px;
+  }
 }
 </style>

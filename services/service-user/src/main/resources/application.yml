@@ -7,12 +7,6 @@ spring:
       discovery:
         username: nacos
         password: 1779614188  # 建议使用环境变量或配置中心存储敏感信息
-#      config:
-#        server-addr: 127.0.0.1:8848  # 配置中心地址
-#        shared-configs: # 引入公共配置
-#          - data-id: jwt-common.yml  # 公共JWT配置的data-id
-#            group: DEFAULT_GROUP  # 对应Nacos中的配置分组
-#            refresh: true  # 支持动态刷新（后续改密钥无需重启所有服务）
 
 server:
   port: 9005

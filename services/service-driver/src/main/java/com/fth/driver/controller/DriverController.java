@@ -6,10 +6,7 @@ import com.fth.driver.domain.model.Driver;
 import com.fth.driver.service.DriverService;
 import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -26,20 +23,20 @@ public class DriverController {
     }
 
     @PutMapping("/updateLocation")
-    public String updateLocation(LocationUpdateDto locationUpdateDto) {
+    public String updateLocation(@RequestBody LocationUpdateDto locationUpdateDto) {
         driverService.updateLocation(locationUpdateDto.getDriverId(), locationUpdateDto.getLng(), locationUpdateDto.getLat());
         return "Location updated";
     }
 
     @GetMapping("/searchNearby")
-    public List<?> searchNearby(SearchDriverDto searchDriverDto) {
+    public List<?> searchNearby(@RequestBody SearchDriverDto searchDriverDto) {
 
         return driverService.searchNearby(searchDriverDto.getLng(),searchDriverDto.getLat(),searchDriverDto.getRadius());
     }
 
     //增加司机
     @PutMapping("/add")
-    public String addDriver(Driver driver) {
+    public String addDriver(@RequestBody Driver driver) {
         driverService.addDriver(driver);
         return "Driver added";
     }
@@ -53,7 +50,7 @@ public class DriverController {
 
     //修改司机信息
     @PutMapping("/update")
-    public String updateDriver(Driver driver) {
+    public String updateDriver(@RequestBody Driver driver) {
         driverService.updateDriver(driver);
         return "Driver updated";
     }

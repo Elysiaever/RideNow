@@ -15,6 +15,7 @@ public class DriverServiceImpl implements DriverService {
     @Autowired
     private RedisService redisService;
 
+    @Autowired
     private DriverMapper driverMapper;
 
     @Override

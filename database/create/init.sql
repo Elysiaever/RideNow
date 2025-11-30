@@ -3,20 +3,16 @@ CREATE TABLE t_user (
     username        VARCHAR(50) NOT NULL UNIQUE,
     password        VARCHAR(255) NOT NULL,
     phone           VARCHAR(20) UNIQUE,
-    role            VARCHAR(20) NOT NULL,      -- passenger / driver
-    rating          NUMERIC(3,2) DEFAULT 5.0,  -- 司机评分，乘客可为空
     created_at      TIMESTAMP DEFAULT NOW(),
     updated_at      TIMESTAMP DEFAULT NOW()
 );
 
-COMMENT ON TABLE t_user IS '用户表：包含乘客和司机，用角色区分';
+COMMENT ON TABLE t_user IS '乘客用户表';
 
 COMMENT ON COLUMN t_user.id            IS '主键 ID';
 COMMENT ON COLUMN t_user.username      IS '用户名';
 COMMENT ON COLUMN t_user.password_hash IS '密码（加密后）';
 COMMENT ON COLUMN t_user.phone         IS '手机号';
-COMMENT ON COLUMN t_user.role          IS '用户角色（passenger 或 driver）';
-COMMENT ON COLUMN t_user.rating        IS '司机评分（仅司机使用）';
 COMMENT ON COLUMN t_user.created_at    IS '创建时间';
 COMMENT ON COLUMN t_user.updated_at    IS '更新时间';
 

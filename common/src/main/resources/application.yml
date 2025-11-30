@@ -1,0 +1,12 @@
+# redis 配置
+redis:
+  host: localhost
+  port: 6380
+  password:
+  timeout: 3000
+  database: 1
+  lettuce:
+    pool:
+      max-active: 8
+      max-idle: 8
+      min-idle: 0

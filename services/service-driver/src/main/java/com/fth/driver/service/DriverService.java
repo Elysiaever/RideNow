@@ -1,0 +1,20 @@
+package com.fth.driver.service;
+
+import com.fth.driver.domain.model.Driver;
+
+import java.util.List;
+
+public interface DriverService {
+
+    void updateLocation(Long driverId, Double lng, Double lat);
+    List<?> searchNearby(Double lng, Double lat, Double radius);
+
+    //增加司机
+    void addDriver(Driver driver);
+    //删除司机
+    void deleteDriver(Long driverId);
+    //修改司机
+    void updateDriver(Driver driver);
+    //查询司机
+    Driver getDriverById(Long driverId);
+}

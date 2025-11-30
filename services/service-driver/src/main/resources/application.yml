@@ -6,7 +6,21 @@ spring:
       server-addr: 127.0.0.1:8848
       discovery:
         username: nacos
-        password: 1779614188
+        password: 177961418
+  datasource:
+    url: jdbc:postgresql://ep-proud-credit-a1il33tr-pooler.ap-southeast-1.aws.neon.tech:5432/neondb?sslmode=require
+    username: neondb_owner
+    password: npg_nLg4bFAKVf2y
+    driver-class-name: org.postgresql.Driver
 server:
   port: 9000
 
+
+
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true  # 下划线自动转驼峰
+  global-config:
+    db-config:
+      id-type: auto                     # 主键自增长

@@ -1,0 +1,22 @@
+# redis 配置
+redis:
+  host: localhost
+  port: 6380
+  password:
+  timeout: 3000
+  database: 1
+  lettuce:
+    pool:
+      max-active: 8
+      max-idle: 8
+      min-idle: 0
+
+mybatis-plus:
+  configuration:
+    # MyBatis 配置
+    map-underscore-to-camel-case: true
+  global-config:
+    # 全局配置
+    db-config:
+      # 数据库配置
+      id-type: auto

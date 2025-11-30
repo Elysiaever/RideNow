@@ -60,11 +60,10 @@ export default defineComponent({
             lng: point.lng,
             lat: point.lat,
             address,
-            mode: props.pickMode  // ⭐ 返回当前模式
+            mode: props.pickMode
           });
         });
 
-        // ⭐ 根据模式绘制标记
         if (props.pickMode === "origin") {
           if (originMarker) map.removeOverlay(originMarker);
           originMarker = new BMap.Marker(point, { icon: iconOrigin });
@@ -78,44 +77,43 @@ export default defineComponent({
     });
 
     /**
-     * ⭐ 外部调用的定位方法（必须带 type）
-     * locatePoint({
-     *   lng, lat, address, type: "origin" | "destination"
-     * })
+     * 外部调用的定位方法（Promise 返回经纬度和地址）
+     * locatePoint({lng?, lat?, address?, type: "origin" | "destination"})
      */
     const locatePoint = (data: {
       lng?: number;
       lat?: number;
       address?: string;
       type: "origin" | "destination";
-    }) => {
-      if (!map) return;
+    }): Promise<{ lng: number; lat: number; address: string }> => {
+      return new Promise((resolve, reject) => {
+        if (!map) return reject("地图未初始化");
 
-      const drawMarker = (point: any) => {
-        if (data.type === "origin") {
-          if (originMarker) map.removeOverlay(originMarker);
-          originMarker = new BMap.Marker(point, { icon: iconOrigin });
-          map.addOverlay(originMarker);
-        } else {
-          if (destMarker) map.removeOverlay(destMarker);
-          destMarker = new BMap.Marker(point, { icon: iconDestination });
-          map.addOverlay(destMarker);
-        }
-
-        map.centerAndZoom(point, 15);
-      };
-
-      if (data.lng != null && data.lat != null) {
-        drawMarker(new BMap.Point(data.lng, data.lat));
-      } else if (data.address) {
-        geocoder.getPoint(data.address, (point: any) => {
-          if (!point) {
-            alert("未找到该地址");
-            return;
+        const drawMarker = (point: any) => {
+          if (data.type === "origin") {
+            if (originMarker) map.removeOverlay(originMarker);
+            originMarker = new BMap.Marker(point, { icon: iconOrigin });
+            map.addOverlay(originMarker);
+          } else {
+            if (destMarker) map.removeOverlay(destMarker);
+            destMarker = new BMap.Marker(point, { icon: iconDestination });
+            map.addOverlay(destMarker);
           }
-          drawMarker(point);
-        });
-      }
+          map.centerAndZoom(point, 15);
+          resolve({ lng: point.lng, lat: point.lat, address: data.address || "" });
+        };
+
+        if (data.lng != null && data.lat != null) {
+          drawMarker(new BMap.Point(data.lng, data.lat));
+        } else if (data.address) {
+          geocoder.getPoint(data.address, (point: any) => {
+            if (!point) return reject("未找到该地址");
+            drawMarker(point);
+          });
+        } else {
+          reject("无地址或坐标");
+        }
+      });
     };
 
     return { mapContainer, locatePoint };

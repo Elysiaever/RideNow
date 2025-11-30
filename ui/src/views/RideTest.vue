@@ -6,9 +6,7 @@
       <el-form :model="form" label-width="90px" class="form">
         
         <el-form-item label="乘客ID">
-          <el-input
-          style="width:90%" 
-          v-model="form.passengerId" />
+          <el-input style="width:90%" v-model="form.passengerId" />
         </el-form-item>
 
         <!-- 出发地（绿色） -->
@@ -91,27 +89,33 @@ const onPickPoint = (p: { lng: number; lat: number; address: string; mode: strin
 };
 
 // 定位出发地
-const locateOrigin = () => {
+const locateOrigin = async () => {
   if (!form.origin.display) {
     ElMessage.warning("请输入出发地地址");
     return;
   }
-  baiduMap.value?.locatePoint({
-    address: form.origin.display,
-    type: "origin",
-  });
+  try {
+    const p = await baiduMap.value.locatePoint({ address: form.origin.display, type: "origin" });
+    form.origin.lng = p.lng;
+    form.origin.lat = p.lat;
+  } catch (err) {
+    ElMessage.error("定位失败：" + err);
+  }
 };
 
 // 定位目的地
-const locateDestination = () => {
+const locateDestination = async () => {
   if (!form.destination.display) {
     ElMessage.warning("请输入目的地地址");
     return;
   }
-  baiduMap.value?.locatePoint({
-    address: form.destination.display,
-    type: "destination",
-  });
+  try {
+    const p = await baiduMap.value.locatePoint({ address: form.destination.display, type: "destination" });
+    form.destination.lng = p.lng;
+    form.destination.lat = p.lat;
+  } catch (err) {
+    ElMessage.error("定位失败：" + err);
+  }
 };
 
 // 提交行程
@@ -120,12 +124,25 @@ const submitForm = async () => {
     ElMessage.warning("请输入乘客ID");
     return;
   }
-  if (!form.origin.lng || !form.destination.lng) {
-    ElMessage.error("请先选择出发地和目的地");
-    return;
-  }
 
   try {
+    // 自动定位输入框地址（如果经纬度为空）
+    if (!form.origin.lng && form.origin.display) {
+      const p = await baiduMap.value.locatePoint({ address: form.origin.display, type: "origin" });
+      form.origin.lng = p.lng;
+      form.origin.lat = p.lat;
+    }
+    if (!form.destination.lng && form.destination.display) {
+      const p = await baiduMap.value.locatePoint({ address: form.destination.display, type: "destination" });
+      form.destination.lng = p.lng;
+      form.destination.lat = p.lat;
+    }
+
+    if (!form.origin.lng || !form.destination.lng) {
+      ElMessage.error("请先选择出发地和目的地");
+      return;
+    }
+
     await request.post("/api/ride/create", {
       passengerId: form.passengerId,
       originAddress: form.origin.display,
@@ -139,7 +156,7 @@ const submitForm = async () => {
     ElMessage.success("行程创建成功！");
   } catch (err) {
     console.error(err);
-    ElMessage.error("提交失败");
+    ElMessage.error("提交失败：" + err);
   }
 };
 </script>

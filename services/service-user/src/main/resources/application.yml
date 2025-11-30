@@ -6,7 +6,7 @@ spring:
       server-addr: 127.0.0.1:8848
       discovery:
         username: nacos
-        password: 1779614188  # 建议使用环境变量或配置中心存储敏感信息
+        password: Cf1590753  # 建议使用环境变量或配置中心存储敏感信息
   datasource:
     url: jdbc:postgresql://ep-proud-credit-a1il33tr-pooler.ap-southeast-1.aws.neon.tech:5432/neondb?sslmode=require
     username: neondb_owner

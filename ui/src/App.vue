@@ -1,12 +1,5 @@
 <script setup lang="ts">
 
-import axios from 'axios';
-
-function hello(){
-  axios.get('http://localhost:80/api/driver/hello').then(function (response) {
-    console.log(response);
-  });
-}
 </script>
 
 <template>
@@ -14,7 +7,6 @@ function hello(){
   <p>
     This is a Blank Page...
   </p>
-  <button @click="hello">Click me</button>
 </template>
 
 <style scoped></style>

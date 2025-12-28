@@ -1,11 +1,14 @@
 package com.fth.driver.controller;
 
 import com.fth.common.core.constant.RedisConstant;
+import com.fth.driver.constant.RabbitMqConstant;
 import com.fth.driver.domain.dto.LocationUpdateDto;
 import com.fth.driver.domain.dto.SearchDriverDto;
+import com.fth.driver.domain.dto.mq.DriverLocationMqMsg;
 import com.fth.driver.domain.model.Driver;
 import com.fth.driver.service.DriverService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.GeoResults;
@@ -29,6 +32,10 @@ public class DriverController {
 
     @Autowired
     private DriverService driverService;
+
+    // 1. 注入RabbitMQ 消息发送模板（生产者核心：用于发送消息到RabbitMQ）
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     /**
      * 【测试用】添加测试司机到 Redis
@@ -162,46 +169,100 @@ public class DriverController {
     /**
      * 更新司机位置
      */
+//    @PutMapping("/updateLocation")
+//    public Map<String, Object> updateLocation(@RequestBody LocationUpdateDto dto) {
+//        log.info("╔════════════════════════════════════════╗");
+//        log.info("║        更新司机位置                     ║");
+//        log.info("╚════════════════════════════════════════╝");
+//        log.info("司机ID: {}", dto.getDriverId());
+//        log.info("经度: {}, 纬度: {}", dto.getLng(), dto.getLat());
+//        log.info("使用的 Key: {}", RedisConstant.DRIVER_GEO_KEY);
+//
+//        try {
+//            // 添加或更新司机位置
+//            Long count = redisTemplate.opsForGeo().add(
+//                    RedisConstant.DRIVER_GEO_KEY,
+//                    new Point(dto.getLng(), dto.getLat()),
+//                    dto.getDriverId().toString()
+//            );
+//
+//            log.info("更新结果: {} (1=新增, 0=更新已有位置)", count);
+//            log.info("════════════════════════════════════════");
+//
+//            Map<String, Object> result = new HashMap<>();
+//            result.put("success", true);
+//            result.put("message", "位置更新成功");
+//            result.put("driverId", dto.getDriverId());
+//            result.put("longitude", dto.getLng());
+//            result.put("latitude", dto.getLat());
+//            result.put("isNew", count == 1);
+//
+//            return result;
+//
+//        } catch (Exception e) {
+//            log.error("❌ 更新位置失败: {}", e.getMessage(), e);
+//
+//            Map<String, Object> result = new HashMap<>();
+//            result.put("success", false);
+//            result.put("message", "位置更新失败: " + e.getMessage());
+//            return result;
+//        }
+//    }
+
+    /**
+     * 改造后：更新司机位置（作为RabbitMQ生产者，发送位置消息到队列，异步写入Redis）
+     */
     @PutMapping("/updateLocation")
     public Map<String, Object> updateLocation(@RequestBody LocationUpdateDto dto) {
         log.info("╔════════════════════════════════════════╗");
-        log.info("║        更新司机位置                     ║");
+        log.info("║        更新司机位置（发送至RabbitMQ）    ║");
         log.info("╚════════════════════════════════════════╝");
         log.info("司机ID: {}", dto.getDriverId());
         log.info("经度: {}, 纬度: {}", dto.getLng(), dto.getLat());
         log.info("使用的 Key: {}", RedisConstant.DRIVER_GEO_KEY);
+        log.info("目标RabbitMQ队列: {}", RabbitMqConstant.DRIVER_LOCATION_QUEUE);
 
         try {
-            // 添加或更新司机位置
-            Long count = redisTemplate.opsForGeo().add(
-                    RedisConstant.DRIVER_GEO_KEY,
-                    new Point(dto.getLng(), dto.getLat()),
-                    dto.getDriverId().toString()
+            // 2. 构建RabbitMQ传输的消息体（将入参dto转换为MQ专用消息对象）
+            DriverLocationMqMsg locationMqMsg = new DriverLocationMqMsg();
+            locationMqMsg.setDriverId(dto.getDriverId());
+            locationMqMsg.setLng(dto.getLng());
+            locationMqMsg.setLat(dto.getLat());
+
+            // 3. 核心操作：发送消息到RabbitMQ（交换机 + 路由键 + 消息体）
+            // 此步骤仅将消息投递到RabbitMQ队列，立即返回，不阻塞接口（支撑高并发）
+            rabbitTemplate.convertAndSend(
+                    RabbitMqConstant.DRIVER_LOCATION_EXCHANGE,  // 交换机名称
+                    RabbitMqConstant.DRIVER_LOCATION_ROUTING_KEY, // 路由键
+                    locationMqMsg  // 待传输的消息体（已序列化）
             );
 
-            log.info("更新结果: {} (1=新增, 0=更新已有位置)", count);
+            // 4. 日志记录：消息发送成功（替代原有Redis更新结果日志）
+            log.info("更新结果: 消息已成功投递至RabbitMQ队列（异步处理中）");
             log.info("════════════════════════════════════════");
 
+            // 5. 保留原有返回结果结构，确保前端调用无感知（无需修改前端代码）
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
-            result.put("message", "位置更新成功");
+            result.put("message", "位置更新请求已接收，正在异步处理");
             result.put("driverId", dto.getDriverId());
             result.put("longitude", dto.getLng());
             result.put("latitude", dto.getLat());
-            result.put("isNew", count == 1);
+            result.put("isNew", false); // 改造后无需返回"是否新增"，保持字段兼容，设为false即可
+            result.put("asyncTip", "消息已存入RabbitMQ，将由消费端异步写入Redis GEO");
 
             return result;
 
         } catch (Exception e) {
-            log.error("❌ 更新位置失败: {}", e.getMessage(), e);
+            log.error("❌ 更新位置失败（消息发送RabbitMQ失败）: {}", e.getMessage(), e);
 
+            // 保留原有错误返回格式，确保前端异常处理兼容
             Map<String, Object> result = new HashMap<>();
             result.put("success", false);
             result.put("message", "位置更新失败: " + e.getMessage());
             return result;
         }
     }
-
     /**
      * 【测试用】验证参数接收
      */

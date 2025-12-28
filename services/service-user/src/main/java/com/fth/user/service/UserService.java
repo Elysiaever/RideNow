@@ -11,4 +11,5 @@ public interface UserService extends IService<User> {
     Optional<User> getByUsername(String username);
     boolean isUsernameExists(String username);
     boolean isPhoneExists(String phone);
+
 }

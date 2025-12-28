@@ -1,5 +1,6 @@
 package com.fth.matching.controller;
 
+import com.fth.common.api.Response;
 import com.fth.matching.service.MatchingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,9 +17,9 @@ public class MatchingController {
     private MatchingService matchingService;
 
 
-    @GetMapping
-    public List<?> findBest(double lng, double lat){
-        return matchingService.findBestMatchingDrivers(lng, lat);
-    }
+    @GetMapping("/findBest")
+    public Response<?> findBest(double lng, double lat){
 
+        return Response.success(matchingService.findBestMatchingDrivers(lng, lat));
+    }
 }

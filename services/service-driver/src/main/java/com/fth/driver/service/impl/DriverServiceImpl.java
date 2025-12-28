@@ -1,5 +1,6 @@
 package com.fth.driver.service.impl;
 
+import com.fth.driver.domain.constant.DriverStatus;
 import com.fth.driver.domain.data.DriverWithDistance;
 import com.fth.driver.domain.model.Driver;
 import com.fth.driver.mapper.DriverMapper;
@@ -124,5 +125,22 @@ public class DriverServiceImpl implements DriverService {
 
         // 返回模拟的在线可接单司机列表
         return onlineDrivers;
+    }
+
+    @Override
+    public void driverOnline(Long driverId, double lng, double lat){
+        redisService.updateDriverLocation(driverId, lng, lat);
+        driverMapper.updateDriverStatus(driverId, DriverStatus.AVAILABLE);
+    }
+
+    @Override
+    public boolean isDriverOnline(Long driverId){
+        return redisService.isDriverOnline(driverId);
+    }
+
+    @Override
+    public void driverOffline(Long driverId){
+        redisService.driverOffline(driverId);
+        driverMapper.updateDriverStatus(driverId, DriverStatus.OFFLINE);
     }
 }

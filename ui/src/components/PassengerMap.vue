@@ -3,7 +3,7 @@
     <!-- 司机信息弹窗 -->
     <el-dialog 
       title="司机信息" 
-      :visible.sync="isDriverDialogOpen" 
+      v-model="isDriverDialogOpen"
       width="300px" 
       append-to-body 
       :z-index="9999"
@@ -87,8 +87,8 @@ export default defineComponent({
               e.domEvent.stopPropagation();
               e.domEvent.preventDefault();
             }
-            e.stopPropagation();
-            e.preventDefault();
+            // e.stopPropagation();
+            // e.preventDefault();
             
             // 使用 setTimeout 确保在事件循环结束后打开弹窗
             setTimeout(() => {
@@ -101,7 +101,7 @@ export default defineComponent({
               
               // 视觉反馈
               if(marker.setAnimation) {
-                marker.setAnimation(BMap.Animation.BOUNCE);
+                marker.setAnimation(2);
                 setTimeout(()=>marker.setAnimation(null), 1000);
               }
             }, 0);

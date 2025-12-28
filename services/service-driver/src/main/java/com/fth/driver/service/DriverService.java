@@ -25,4 +25,10 @@ public interface DriverService {
      * @return 符合条件的司机列表
      */
     List<DriverWithDistance> getAllOnlineAndAvailableDrivers();
+
+    void driverOnline(Long driverId,double lng,double lat);
+
+    void driverOffline(Long driverId);
+
+    boolean isDriverOnline(Long driverId);
 }

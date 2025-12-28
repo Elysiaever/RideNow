@@ -1,11 +1,14 @@
 package com.fth.driver.controller;
 
+import com.fth.common.core.constant.RedisConstant;
 import com.fth.driver.domain.dto.LocationUpdateDto;
 import com.fth.driver.domain.dto.SearchDriverDto;
 import com.fth.driver.domain.model.Driver;
 import com.fth.driver.service.DriverService;
 import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.geo.Point;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,6 +16,47 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/driver")
 public class DriverController {
+
+
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
+    /**
+     * 【测试用】添加几个测试司机到 Redis
+     * 访问这个接口就能添加测试数据
+     */
+    @GetMapping("/test/init")
+    public String initTestData() {
+        // 清空旧数据
+        redisTemplate.delete(RedisConstant.DRIVER_GEO_KEY);
+
+        // 添加4个测试司机（北京天安门附近）
+        redisTemplate.opsForGeo().add(
+                RedisConstant.DRIVER_GEO_KEY,
+                new Point(116.404, 39.915),  // 天安门
+                "driver001"
+        );
+
+        redisTemplate.opsForGeo().add(
+                RedisConstant.DRIVER_GEO_KEY,
+                new Point(116.408, 39.918),  // 附近500米
+                "driver002"
+        );
+
+        redisTemplate.opsForGeo().add(
+                RedisConstant.DRIVER_GEO_KEY,
+                new Point(116.400, 39.910),  // 附近800米
+                "driver003"
+        );
+
+        redisTemplate.opsForGeo().add(
+                RedisConstant.DRIVER_GEO_KEY,
+                new Point(116.420, 39.920),  // 附近2公里
+                "driver004"
+        );
+
+        return "✅ 成功添加4个测试司机！";
+    }
 
     @Autowired
     private DriverService driverService;
@@ -23,7 +67,7 @@ public class DriverController {
         return "Location updated";
     }
 
-    @GetMapping("/searchNearby")
+    @PutMapping("/searchNearby")
     public List<?> searchNearby(@RequestBody SearchDriverDto searchDriverDto) {
 
         return driverService.searchNearby(searchDriverDto.getLng(),searchDriverDto.getLat(),searchDriverDto.getRadius());

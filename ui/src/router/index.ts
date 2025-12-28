@@ -25,7 +25,8 @@ const router = createRouter({
     {
       path: "/ride",
       name: "Ride",
-      component: () => import("@/views/RideTest.vue")
+      component: () => import("@/views/RideTest.vue"),
+      meta: { requiresAuth: true, role: 'PASSENGER' }
     },
   ]
 })

@@ -64,8 +64,8 @@ export default defineComponent({
     const isLogin = ref(true)
 
     const form = reactive({
-      username: '',
-      password: '',
+      username: '2352835',
+      password: '2352835',
       confirmPassword: ''
     })
 
@@ -102,9 +102,10 @@ export default defineComponent({
         if (isLogin.value) {
           // 登录逻辑 - 登录成功后跳转到Ride页面
           const res = await login(form.username, form.password)
+          console.log(res.data)
           auth.setAuth({
             token: res.data.token,
-            roles: res.data.roles || []
+            roles: res.data.roles || ['PASSENGER']
           })
           // 直接跳转到行程页面，不分角色
           router.push('/ride')

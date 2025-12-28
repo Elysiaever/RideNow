@@ -1,11 +1,11 @@
 spring:
   data:
     redis:
-      host: localhost
+      host: 127.0.0.1
       port: 6380
       password:
       timeout: 3000
-      database: 1
+      database: 0
       lettuce:
         pool:
           max-active: 8

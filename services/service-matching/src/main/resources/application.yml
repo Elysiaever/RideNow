@@ -1,4 +1,16 @@
 spring:
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6380
+      password:
+      timeout: 3000
+      database: 0
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
   application:
     name: service-matching
   cloud:
@@ -7,6 +19,11 @@ spring:
       discovery:
         username: nacos
         password: Cf1590753
+  datasource:
+    url: jdbc:postgresql://ep-proud-credit-a1il33tr-pooler.ap-southeast-1.aws.neon.tech:5432/neondb?sslmode=require
+    username: neondb_owner
+    password: npg_nLg4bFAKVf2y
+    driver-class-name: org.postgresql.Driver
 server:
   port: 9001
 

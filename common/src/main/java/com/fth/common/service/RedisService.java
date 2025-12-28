@@ -1,10 +1,6 @@
 package com.fth.common.service;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -287,32 +283,40 @@ public class RedisService
     //以某点为中心，搜索半径某范围内的某一Key
     public GeoResults<RedisGeoCommands.GeoLocation<String>> searchNearby(String key, double longitude, double latitude, double radius)
     {
-        Circle circle = new Circle(longitude, latitude, radius);
+        // ✅ 使用 Point 和 Distance 创建 Circle
+        Point center = new Point(longitude, latitude);
+        Circle circle = new Circle(center, radius);
 
         // 搜索参数：包含距离 + 按距离升序排序
         RedisGeoCommands.GeoRadiusCommandArgs args =
                 RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs()
                         .includeDistance()
+                        .includeCoordinates()  // ✅ 添加这个，获取坐标
                         .sortAscending();
+
         return redisTemplate.opsForGeo().radius(key, circle, args);
     }
 
-    //搜索司机
-    public List<?> searchDriverNearby(double longitude, double latitude, double radius)
+    // 搜索司机方法也要修改返回值
+    public List<Map<String, Object>> searchDriverNearby(double longitude, double latitude, double radius)
     {
-        GeoResults<RedisGeoCommands.GeoLocation<String>> geoResults = searchNearby(RedisConstant.DRIVER_GEO_KEY, longitude, latitude, radius);
+        GeoResults<RedisGeoCommands.GeoLocation<String>> geoResults =
+                searchNearby(RedisConstant.DRIVER_GEO_KEY, longitude, latitude, radius);
 
-        if(geoResults == null)
+        if(geoResults == null || geoResults.getContent().isEmpty())
             return List.of();
+
         return geoResults.getContent().stream()
                 .map(r -> {
-//                    String driverId = r.getContent().getName();
-//                    double distance = r.getDistance().getValue();
-                      return new Object();
+                    Map<String, Object> driver = new HashMap<>();
+                    driver.put("driverId", r.getContent().getName());
+                    driver.put("distance", r.getDistance().getValue());
+                    driver.put("longitude", r.getContent().getPoint().getX());
+                    driver.put("latitude", r.getContent().getPoint().getY());
+                    return driver;
                 })
                 .collect(Collectors.toList());
     }
-
     public boolean isDriverOnline(Long driverId) {
         return redisTemplate.hasKey(RedisConstant.DRIVER_ONLINE_KEY + driverId.toString());
     }

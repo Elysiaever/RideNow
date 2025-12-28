@@ -13,7 +13,7 @@ class TaxiDriver(FastHttpUser):
         # 1. 定义 Header 字典
         self.my_headers = {
             # 请替换为你真实的 Token
-            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMzUyODM1IiwiZXhwIjoxNzY2OTQ1MDA3fQ.mX4M1vQZU96c-73zuuTathT37XMnsXlf8Nxy4Ebf784", 
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMzUyODM1IiwiZXhwIjoxNzY2OTQ5MjgxfQ.pb8c5kLbC2uMG9crPf_t_fIyvEB98FSSYFMGSjwpAqU", 
             "Content-Type": "application/json"
         }
 

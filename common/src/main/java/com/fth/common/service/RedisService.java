@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
@@ -22,6 +23,7 @@ import com.fth.common.core.constant.RedisConstant;
  *
  * @author ruoyi
  **/
+@Slf4j
 @SuppressWarnings(value = { "unchecked", "rawtypes" })
 @Component
 public class RedisService
@@ -300,6 +302,8 @@ public class RedisService
     // 搜索司机方法也要修改返回值
     public List<Map<String, Object>> searchDriverNearby(double longitude, double latitude, double radius)
     {
+        log.info("redisTemplate hash = {}", System.identityHashCode(redisTemplate));
+
         GeoResults<RedisGeoCommands.GeoLocation<String>> geoResults =
                 searchNearby(RedisConstant.DRIVER_GEO_KEY, longitude, latitude, radius);
 

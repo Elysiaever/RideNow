@@ -65,4 +65,9 @@ public class DriverServiceImpl implements DriverService {
         redisService.driverOffline(driverId);
         driverMapper.updateDriverStatus(driverId, DriverStatus.OFFLINE);
     }
+
+    @Override
+    public boolean isDriver(Long userId) {
+        return driverMapper.countByUserId(userId) > 0;
+    }
 }

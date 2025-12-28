@@ -582,4 +582,9 @@ public class DriverController {
 
         return result;
     }
+
+    @GetMapping("/is-driver")
+    public boolean isDriver(@RequestParam Long userId) {
+        return driverService.isDriver(userId);
+    }
 }

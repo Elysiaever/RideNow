@@ -12,4 +12,5 @@ public class LoginResponse {
     private String token; // JWT令牌
     private Long expirationSeconds; // 令牌过期时间（秒）
     private String username; // 用户名
+    private Long userId;
 }

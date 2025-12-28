@@ -1,17 +1,16 @@
 package com.fth.user.controller;
 
 import com.fth.common.api.Response;
-import com.fth.user.domain.dto.LoginRequest;
-import com.fth.user.domain.dto.LoginResponse;
+import com.fth.common.feign.driver.DriverFeignClient;
+import com.fth.user.domain.dto.*;
 
-import com.fth.user.domain.dto.RegisterRequest;
-import com.fth.user.domain.dto.RegisterResponse;
 import com.fth.user.domain.model.User;
 import com.fth.user.service.LoginService;
 import com.fth.user.service.RegisterService;
 import com.fth.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +28,9 @@ public class LoginController {
     private final LoginService loginService;
     private final RegisterService registerService;
     private final UserService userService;
+
+    @Autowired
+    DriverFeignClient driverFeignClient;
 
     public LoginController(LoginService loginService, RegisterService registerService, UserService userService) {
         this.loginService = loginService;
@@ -54,12 +56,19 @@ public class LoginController {
         return Response.success(response);
     }
 
-    @GetMapping("/getUserByUsername")
-    public Response getUserByUsername(@RequestParam String username) {
-        Optional<User> user = userService.getByUsername(username);
-        if (user.isEmpty()) {
+    @GetMapping("/info")
+    public Response<UserInfo> getUserById(@RequestParam Long userId) {
+        User user = userService.getUserById(userId);
+        if (user == null) {
             return Response.error(404, "用户不存在");
         }
-        return Response.success(user);
+        UserInfo userInfo = new UserInfo();
+        userInfo.setId(user.getId());
+        userInfo.setUsername(user.getUsername());
+        userInfo.setPhone(user.getPhone());
+
+        String role = driverFeignClient.isDriver(userId) ? "DRIVER" : "USER";
+        userInfo.setRole(role);
+        return Response.success(userInfo);
     }
 }

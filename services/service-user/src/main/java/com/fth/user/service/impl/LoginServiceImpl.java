@@ -46,7 +46,8 @@ public class LoginServiceImpl implements LoginService {
         return new LoginResponse(
                 token,
                 expirationSeconds,
-                user.getUsername()
+                user.getUsername(),
+                user.getId()
         );
     }
 

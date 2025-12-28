@@ -23,4 +23,9 @@ public interface DriverService {
     void driverOffline(Long driverId);
 
     boolean isDriverOnline(Long driverId);
+
+    /**
+     * 判断用户是否为司机
+     */
+    boolean isDriver(Long userId);
 }

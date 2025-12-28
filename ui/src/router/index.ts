@@ -13,6 +13,12 @@ const router = createRouter({
       component: () => import('@/views/RideTest.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/driver',
+      name: 'Driver',
+      component: () => import('@/views/DriverWorkBench.vue'),
+      meta: { requiresAuth: true }
+    }
   ]
 })
 

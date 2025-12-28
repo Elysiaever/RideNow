@@ -57,7 +57,7 @@
 <script lang="ts" setup>
 import { reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
-import BaiduMap from "@/components/BaiduMap.vue";
+import BaiduMap from "@/components/PassengerMap.vue";
 import request from "@/utils/request";
 
 const baiduMap = ref<any>(null);

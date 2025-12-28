@@ -15,3 +15,9 @@ export function register(username: string, password: string) {
         password
     })
 }
+
+// 通过用户名获取完整用户信息
+
+export function getUserByUsername(username: string) {
+    return request.get(`/api/user/getUserByUsername?username=${username}`)
+}

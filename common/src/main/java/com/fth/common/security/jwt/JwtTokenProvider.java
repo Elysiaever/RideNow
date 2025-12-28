@@ -4,7 +4,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fth.common.security.exception.InvalidTokenException;
+import com.fth.common.core.constant.ExceptionConstant;
+import com.fth.common.exception.BusinessException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -35,14 +36,13 @@ public class JwtTokenProvider {
                 .sign(algorithm);
     }
 
-    /**
-     * 验证Token有效性（仅校验签名和过期时间）
-     */
     public void validateToken(String token) {
         try {
             JWT.require(algorithm).build().verify(token);
         } catch (JWTVerificationException e) {
-            throw new InvalidTokenException("Token无效或已过期：" + e.getMessage());
+            // 补充错误码（例如 401 表示认证失败），并携带异常信息
+            throw new BusinessException(401, ExceptionConstant.TOKEN_INVALID);
+
         }
     }
 
@@ -54,10 +54,11 @@ public class JwtTokenProvider {
             DecodedJWT decodedJWT = JWT.require(algorithm).build().verify(token);
             return decodedJWT.getSubject();
         } catch (JWTVerificationException e) {
-            throw new InvalidTokenException("Token解析失败：" + e.getMessage());
+            // 补充错误码（与上面保持一致，均为 Token 相关错误）
+            throw new BusinessException(401, ExceptionConstant.TOKEN_INVALID);
+
         }
     }
-
     /**
      * 获取Token过期时间（秒）
      */

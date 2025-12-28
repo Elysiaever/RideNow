@@ -1,43 +1,46 @@
 package com.fth.ride.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fth.ride.domain.dto.RideCreateRequest;
 import com.fth.ride.domain.dto.RideResponse;
-import com.fth.ride.domain.enums.RideStatus;
 import com.fth.ride.domain.model.Ride;
 import com.fth.ride.mapper.RideMapper;
 import com.fth.ride.service.RideService;
+import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * 行程服务实现类（使用内存存储）
- */
+@Service
 public class RideServiceImpl implements RideService {
 
-    private final RideMapper mapper = new RideMapper();
+    @Autowired
+    private RideMapper mapper;
 
     @Override
-    public RideResponse createRide(RideCreateRequest rideCreateRequest) {
+    public RideResponse createRide(RideCreateRequest req) {
+
         Ride ride = new Ride();
 
-        ride.setPassengerId(rideCreateRequest.getPassengerId());
-        ride.setOrigin(rideCreateRequest.getOrigin());
-        ride.setDestination(rideCreateRequest.getDestination());
+        ride.setRideId(UUID.randomUUID().toString());
+        ride.setPassengerId(req.getPassengerId());
 
-        // 自动生成 rideId
-        if (ride.getRideId() == null || ride.getRideId().isEmpty()) {
-            ride.setRideId(UUID.randomUUID().toString());
-        }
+        // 经纬度存储（假设你已经改成 double 类型）
+        ride.setOriginLat(req.getOriginLat());
+        ride.setOriginLng(req.getOriginLng());
+        ride.setOriginAddress(req.getOriginAddress());
+        ride.setDestLat(req.getDestLat());
+        ride.setDestLng(req.getDestLng());
+        ride.setDestAddress(req.getDestAddress());
 
-        // 初始化状态和时间
-        ride.setStatus(RideStatus.REQUESTED);
-        if (ride.getRequestTime() == null) {
-            ride.setRequestTime(java.time.LocalDateTime.now());
-        }
+        // 基础状态初始化
+        ride.setStatus("REQUESTED");
+        ride.setRequestTime(LocalDateTime.now());
 
-        // 保存行程
         mapper.insert(ride);
 
         return RideResponse.from(ride);
@@ -45,25 +48,36 @@ public class RideServiceImpl implements RideService {
 
     @Override
     public List<RideResponse> getHistoryRidesByPassengerId(String passengerId) {
-        List<Ride> rides = mapper.selectByPassengerId(passengerId);
+
+        LambdaQueryWrapper<Ride> qw = new LambdaQueryWrapper<>();
+        qw.eq(Ride::getPassengerId, passengerId)
+                .orderByDesc(Ride::getRequestTime);
+
+        List<Ride> rides = mapper.selectList(qw);
+
         return rides.stream()
                 .map(RideResponse::from)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public RideResponse updateRideStatus(String rideId, RideStatus status) {
+    public RideResponse updateRideStatus(String rideId,String status) {
         Ride ride = mapper.selectById(rideId);
-        if (ride != null) {
-            ride.setStatus(status);
 
-            // 如果状态是开始/结束，自动设置时间
-            if (status == RideStatus.PICKEDUP) ride.setStartTime(java.time.LocalDateTime.now());
-            if (status == RideStatus.FINISHED) ride.setEndTime(java.time.LocalDateTime.now());
+        if (ride == null) return null;
 
-            mapper.update(ride);
-            return RideResponse.from(ride);
+        ride.setStatus(status);
+
+        // 自动时间流转
+        if (status == "PICKEDUP") {
+            ride.setStartTime(LocalDateTime.now());
         }
-        return null;
+        if (status == "FINISHED") {
+            ride.setEndTime(LocalDateTime.now());
+        }
+
+        mapper.updateById(ride);
+
+        return RideResponse.from(ride);
     }
 }

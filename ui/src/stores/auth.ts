@@ -1,12 +1,10 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
+// 导入 request.ts 中的自定义 axios 实例，而非全局 axios
+import request from '../utils/request'
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
-        token: localStorage.getItem('token'),
-        roles: localStorage.getItem('roles')
-            ? JSON.parse(localStorage.getItem('roles')!)
-            : []
+        token: localStorage.getItem('token') || null
     }),
 
     getters: {
@@ -14,24 +12,31 @@ export const useAuthStore = defineStore('auth', {
     },
 
     actions: {
-        setAuth(data: { token: string; roles: string[] }) {
-            this.token = data.token
-            this.roles = data.roles
-
-            localStorage.setItem('token', data.token)
-            localStorage.setItem('roles', JSON.stringify(data.roles))
-
-            axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
+        setAuth(token: string) {
+            this.token = token
+            localStorage.setItem('token', token)
+            // 改为给自定义 request 实例设置默认 headers
+            request.defaults.headers.common['Authorization'] = `Bearer ${token}`
         },
 
         logout() {
             this.token = null
-            this.roles = []
-
             localStorage.removeItem('token')
-            localStorage.removeItem('roles')
+            // 同时清除自定义实例的 Authorization 头
+            delete request.defaults.headers.common['Authorization']
+        },
 
-            delete axios.defaults.headers.common['Authorization']
+        // 判断 token 是否过期（保持不变）
+        isTokenExpired(): boolean {
+            if (!this.token) return true
+            try {
+                const payloadBase64 = this.token.split('.')[1]
+                if (!payloadBase64) return true
+                const payload = JSON.parse(atob(payloadBase64))
+                return !payload.exp || Math.floor(Date.now() / 1000) >= payload.exp
+            } catch {
+                return true
+            }
         }
     }
 })

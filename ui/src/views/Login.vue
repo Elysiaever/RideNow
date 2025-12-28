@@ -83,7 +83,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, reactive, computed, nextTick } from 'vue'
-import { login, register, getUserByUsername } from '../api/user'
+import { login, register, getInfo } from '../api/user'
 import { useAuthStore } from '../stores/auth'
 import { useUserStore } from '../stores/userStore'
 import router from '../router'
@@ -173,15 +173,22 @@ export default defineComponent({
 
       auth.setAuth(res.data.data.token)
       ElMessage.success('登录成功，正在跳转...')
-
-      const userResp = await getUserByUsername(form.username)
+      const userResp = await getInfo(res.data.data.userId)
       if (userResp.data && userResp.data.data) {
         userStore.setUserInfo(userResp.data.data)
       }
 
-      setTimeout(() => {
-        router.push('/ride')
-      }, 80)
+      const role = userResp.data.data.role
+      if (role === 'USER') {
+        setTimeout(() => {
+          router.push('/ride')
+        }, 80)
+      }
+      else if (role === 'DRIVER') {
+            setTimeout(() => {
+          router.push('/driver')
+        }, 80)
+      }
     }
 
     const handleRegister = async () => {

@@ -20,3 +20,8 @@ export function driverOffline(driverId: number) {
     // 写法 B: 如果写法 A 报错，可以用这种最稳妥的拼串方式：
     // return request.put(`/api/driver/offline?driverId=${driverId}`)
 }
+
+// 后端接口: PUT /api/driver/updateLocation 
+export function updateDriverLocation(data: { driverId: number; lng: number; lat: number }) {
+    return request.put('/api/driver/updateLocation', data)
+}

@@ -15,6 +15,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -29,6 +30,9 @@ public class DriverController {
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     @Autowired
     private DriverService driverService;
@@ -214,6 +218,9 @@ public class DriverController {
      */
     @PutMapping("/updateLocation")
     public Map<String, Object> updateLocation(@RequestBody LocationUpdateDto dto) {
+
+
+
         log.info("╔════════════════════════════════════════╗");
         log.info("║        更新司机位置（发送至RabbitMQ）    ║");
         log.info("╚════════════════════════════════════════╝");
@@ -223,46 +230,95 @@ public class DriverController {
         log.info("目标RabbitMQ队列: {}", RabbitMqConstant.DRIVER_LOCATION_QUEUE);
 
         try {
-            // 2. 构建RabbitMQ传输的消息体（将入参dto转换为MQ专用消息对象）
+            boolean shouldSend = true; // 是否发送消息到RabbitMQ
+            long now = System.currentTimeMillis();
+
+            // --- 1. 读取 Redis 中司机当前位置 ---
+            List<Point> pointList = redisTemplate.opsForGeo()
+                    .position(RedisConstant.DRIVER_GEO_KEY, dto.getDriverId().toString());
+
+            double distance = Double.MAX_VALUE; // 默认距离为无限大
+            if (pointList != null && !pointList.isEmpty() && pointList.get(0) != null) {
+                Point currentPoint = pointList.get(0);
+                double oldLng = currentPoint.getX();
+                double oldLat = currentPoint.getY();
+
+                distance = calculateDistance(oldLat, oldLng, dto.getLat(), dto.getLng());
+                log.info("读取Redis GEO当前经纬度: {}, {}，与更新经纬度距离: {} 米", oldLng, oldLat, distance);
+
+                // --- 读取上次写入时间戳 ---
+                String timestampKey = RedisConstant.DRIVER_GEO_KEY + ":timestamp";
+                Object lastTimestampObj = stringRedisTemplate.opsForHash().get(timestampKey, dto.getDriverId().toString());
+                long lastTimestamp = lastTimestampObj != null ? Long.parseLong(lastTimestampObj.toString()) : 0;
+
+                // --- 判断是否强制写入 ---
+                if (distance < 20 && (now - lastTimestamp <= 10000)) {
+                    log.info("距离小于20米且10秒内已有写入，忽略此次更新，不发送到RabbitMQ");
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("success", true);
+                    result.put("message", "位置变化小于20米，忽略更新");
+                    result.put("driverId", dto.getDriverId());
+                    result.put("longitude", dto.getLng());
+                    result.put("latitude", dto.getLat());
+                    result.put("asyncTip", "位置变化过小，未发送到RabbitMQ");
+                    return result;
+                }
+            }
+
+            // --- 2. 构建 RabbitMQ 消息 ---
             DriverLocationMqMsg locationMqMsg = new DriverLocationMqMsg();
             locationMqMsg.setDriverId(dto.getDriverId());
             locationMqMsg.setLng(dto.getLng());
             locationMqMsg.setLat(dto.getLat());
 
-            // 3. 核心操作：发送消息到RabbitMQ（交换机 + 路由键 + 消息体）
-            // 此步骤仅将消息投递到RabbitMQ队列，立即返回，不阻塞接口（支撑高并发）
+            // --- 3. 发送消息到 RabbitMQ ---
             rabbitTemplate.convertAndSend(
-                    RabbitMqConstant.DRIVER_LOCATION_EXCHANGE,  // 交换机名称
-                    RabbitMqConstant.DRIVER_LOCATION_ROUTING_KEY, // 路由键
-                    locationMqMsg  // 待传输的消息体（已序列化）
+                    RabbitMqConstant.DRIVER_LOCATION_EXCHANGE,
+                    RabbitMqConstant.DRIVER_LOCATION_ROUTING_KEY,
+                    locationMqMsg
             );
 
-            // 4. 日志记录：消息发送成功（替代原有Redis更新结果日志）
             log.info("更新结果: 消息已成功投递至RabbitMQ队列（异步处理中）");
             log.info("════════════════════════════════════════");
 
-            // 5. 保留原有返回结果结构，确保前端调用无感知（无需修改前端代码）
+            // --- 4. 返回结果 ---
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("message", "位置更新请求已接收，正在异步处理");
             result.put("driverId", dto.getDriverId());
             result.put("longitude", dto.getLng());
             result.put("latitude", dto.getLat());
-            result.put("isNew", false); // 改造后无需返回"是否新增"，保持字段兼容，设为false即可
+            result.put("isNew", false);
             result.put("asyncTip", "消息已存入RabbitMQ，将由消费端异步写入Redis GEO");
-
             return result;
 
         } catch (Exception e) {
             log.error("❌ 更新位置失败（消息发送RabbitMQ失败）: {}", e.getMessage(), e);
-
-            // 保留原有错误返回格式，确保前端异常处理兼容
             Map<String, Object> result = new HashMap<>();
             result.put("success", false);
             result.put("message", "位置更新失败: " + e.getMessage());
             return result;
         }
     }
+
+    /**
+     * 计算两点间距离（单位：米）
+     */
+    private double calculateDistance(double lat1, double lng1, double lat2, double lng2) {
+        final int R = 6371000; // 地球半径（米）
+        double radLat1 = Math.toRadians(lat1);
+        double radLat2 = Math.toRadians(lat2);
+        double deltaLat = radLat2 - radLat1;
+        double deltaLng = Math.toRadians(lng2 - lng1);
+
+        double a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                Math.cos(radLat1) * Math.cos(radLat2) *
+                        Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
     /**
      * 【测试用】验证参数接收
      */

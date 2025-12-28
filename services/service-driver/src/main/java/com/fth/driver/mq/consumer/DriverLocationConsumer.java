@@ -28,10 +28,11 @@ public class DriverLocationConsumer {
     @RabbitListener(queues = RabbitMqConstant.DRIVER_LOCATION_QUEUE)
     public void consumeDriverLocation(DriverLocationMqMsg locationMqMsg) {
         try {
-            // 2. 提取消息数据
+            // 1. 提取消息数据
             Long driverId = locationMqMsg.getDriverId();
             Double lng = locationMqMsg.getLng();
             Double lat = locationMqMsg.getLat();
+            long now = System.currentTimeMillis();
 
             log.info("╔════════════════════════════════════════╗");
             log.info("║        异步消费消息（开始写入Redis GEO） ║");
@@ -40,19 +41,24 @@ public class DriverLocationConsumer {
             log.info("从队列取出经度: {}, 纬度: {}", lng, lat);
             log.info("Redis GEO Key: {}", RedisConstant.DRIVER_GEO_KEY);
 
-            // 3. 写入Redis GEO（StringRedisTemplate 用法与原 RedisTemplate 一致，兼容GEO操作）
+            // 2. 写入 Redis GEO
             Long count = stringRedisTemplate.opsForGeo().add(
                     RedisConstant.DRIVER_GEO_KEY,
                     new Point(lng, lat),
                     driverId.toString()
             );
 
-            // 4. 日志记录写入结果
+            // 3. 同时写入时间戳（毫秒）
+            String timestampKey = RedisConstant.DRIVER_GEO_KEY + ":timestamp";
+            stringRedisTemplate.opsForHash().put(timestampKey, driverId.toString(), String.valueOf(now));
+
             log.info("Redis GEO写入结果: {} (1=新增司机位置, 0=更新已有司机位置)", count);
+            log.info("更新时间戳写入 Redis，字段：{}，值：{}", driverId, now);
             log.info("════════════════════════════════════════");
 
         } catch (Exception e) {
             log.error("❌ 异步消费消息失败（写入Redis GEO异常）: {}", e.getMessage(), e);
         }
     }
+
 }

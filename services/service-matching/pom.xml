@@ -10,6 +10,14 @@
     </parent>
 
     <artifactId>service-matching</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>com.fth</groupId>
+            <artifactId>service-driver</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 
 
 </project>

@@ -1,5 +1,6 @@
 // src/stores/userStore.ts
 import { defineStore } from 'pinia'
+import { useAuthStore } from './auth'
 
 interface UserInfo {
     id?: number
@@ -9,21 +10,42 @@ interface UserInfo {
     email?: string
     roles?: string[]
     avatar?: string
-    // ... 根据你的后端信息继续补充
+    gender?: string
+    birthday?: string
 }
 
 export const useUserStore = defineStore('userStore', {
     state: () => ({
-        userInfo: {} as UserInfo,
+        // 现在主要依赖auth store中的用户信息
     }),
 
+    getters: {
+        userInfo(): UserInfo {
+            const authStore = useAuthStore()
+            return authStore.userInfo
+        },
+        
+        isLoggedIn(): boolean {
+            const authStore = useAuthStore()
+            return authStore.isLoggedIn
+        }
+    },
+
     actions: {
+        // 通过auth store来管理用户信息
         setUserInfo(info: UserInfo) {
-            this.userInfo = info
+            const authStore = useAuthStore()
+            authStore.setUserInfo(info)
         },
 
         clearUserInfo() {
-            this.userInfo = {}
+            const authStore = useAuthStore()
+            authStore.userInfo = {}
+        },
+        
+        loadStoredUserInfo() {
+            const authStore = useAuthStore()
+            authStore.loadStoredUserInfo()
         }
     }
 })

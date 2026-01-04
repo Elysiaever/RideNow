@@ -5,7 +5,7 @@
 
     <el-card class="login-card" :header="isLogin ? '用户登录' : '用户注册'">
       <div class="card-header-icon">
-  <el-icon :size="36" :component="isLogin ? Lock : User" />
+        <el-icon :size="36" :component="isLogin ? Lock : User" />
       </div>
 
       <el-form
@@ -81,140 +81,134 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, reactive, computed, nextTick } from 'vue'
+<script setup lang="ts">
+import { ref, reactive, computed, nextTick } from 'vue'
 import { login, register, getInfo } from '../api/user'
 import { useAuthStore } from '../stores/auth'
 import { useUserStore } from '../stores/userStore'
 import router from '../router'
-import { ElMessage, ElIcon } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { Lock, User } from '@element-plus/icons-vue'
 import type { FormInstance } from 'element-plus'
 
-export default defineComponent({
-  components: { ElIcon, Lock, User },
-  setup() {
+const authStore = useAuthStore()
+const userStore = useUserStore()
 
-    // ❗❗❗ 正确的位置
-    const auth = useAuthStore()
-    const userStore = useUserStore()
+const formRef = ref<FormInstance>()
+const isLogin = ref(true)
 
-    const formRef = ref<FormInstance>()
-    const isLogin = ref(true)
+const loginLoading = ref(false)
+const registerLoading = ref(false)
+const error = ref('')
 
-    const loginLoading = ref(false)
-    const registerLoading = ref(false)
-    const error = ref('')
-
-    const form = reactive({
-      username: '',
-      password: '',
-      confirmPassword: ''
-    })
-
-    const rules = computed(() => ({
-      username: [
-        { required: true, message: '请输入用户名', trigger: 'blur' },
-        { min: 3, max: 20, message: '用户名长度在 3-20 个字符之间', trigger: 'blur' }
-      ],
-      password: [
-        { required: true, message: '请输入密码', trigger: 'blur' },
-        { min: 6, max: 20, message: '密码长度在 6-20 个字符之间', trigger: 'blur' }
-      ],
-      confirmPassword: isLogin.value
-        ? []
-        : [
-            { required: true, message: '请确认密码', trigger: 'blur' },
-            {
-              validator(rule: any, value: string, callback: any) {
-                if (value !== form.password) {
-                  callback(new Error('两次输入的密码不一致'))
-                } else {
-                  callback()
-                }
-              },
-              trigger: 'blur'
-            }
-          ]
-    }))
-
-    const toggleMode = () => {
-      isLogin.value = !isLogin.value
-      error.value = ''
-      formRef.value?.resetFields()
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-
-    const submit = async () => {
-      try {
-        await formRef.value?.validate()
-        error.value = ''
-        if (isLogin.value) {
-          loginLoading.value = true
-          await handleLogin()
-        } else {
-          registerLoading.value = true
-          await handleRegister()
-        }
-      } catch (err: any) {
-        error.value =
-          err.response?.data?.message || err.message || (isLogin.value ? '登录失败' : '注册失败')
-      } finally {
-        loginLoading.value = false
-        registerLoading.value = false
-        nextTick(() =>
-          document.querySelector('.error-message')?.scrollIntoView({ behavior: 'smooth' })
-        )
-      }
-    }
-
-    const handleLogin = async () => {
-      const res = await login(form.username, form.password)
-
-      auth.setAuth(res.data.data.token)
-      ElMessage.success('登录成功，正在跳转...')
-      const userResp = await getInfo(res.data.data.userId)
-      if (userResp.data && userResp.data.data) {
-        userStore.setUserInfo(userResp.data.data)
-      }
-
-      const role = userResp.data.data.role
-      if (role === 'USER') {
-        setTimeout(() => {
-          router.push('/ride')
-        }, 80)
-      }
-      else if (role === 'DRIVER') {
-            setTimeout(() => {
-          router.push('/driver')
-        }, 80)
-      }
-    }
-
-    const handleRegister = async () => {
-      await register(form.username, form.password)
-      ElMessage.success('注册成功，请登录')
-      toggleMode()
-    }
-
-    const loading = computed(() =>
-      isLogin.value ? loginLoading.value : registerLoading.value
-    )
-
-    return {
-      form,
-      rules,
-      formRef,
-      loading,
-      error,
-      submit,
-      isLogin,
-      toggleMode,
-      Lock,
-      User
-    }
-  }
+const form = reactive({
+  username: '',
+  password: '',
+  confirmPassword: ''
 })
+
+const rules = computed(() => ({
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度在 3-20 个字符之间', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在 6-20 个字符之间', trigger: 'blur' }
+  ],
+  confirmPassword: isLogin.value
+    ? []
+    : [
+        { required: true, message: '请确认密码', trigger: 'blur' },
+        {
+          validator(rule: any, value: string, callback: any) {
+            if (value !== form.password) {
+              callback(new Error('两次输入的密码不一致'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }
+      ]
+}))
+
+const toggleMode = () => {
+  isLogin.value = !isLogin.value
+  error.value = ''
+  formRef.value?.resetFields()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const submit = async () => {
+  try {
+    await formRef.value?.validate()
+    error.value = ''
+    if (isLogin.value) {
+      loginLoading.value = true
+      await handleLogin()
+    } else {
+      registerLoading.value = true
+      await handleRegister()
+    }
+  } catch (err: any) {
+    error.value =
+      err.response?.data?.message || err.message || (isLogin.value ? '登录失败' : '注册失败')
+  } finally {
+    loginLoading.value = false
+    registerLoading.value = false
+    nextTick(() =>
+      document.querySelector('.error-message')?.scrollIntoView({ behavior: 'smooth' })
+    )
+  }
+}
+
+const handleLogin = async () => {
+  const res = await login(form.username, form.password)
+  authStore.setAuth(res.data.data.token)
+  // 获取用户信息
+  const userResp = await getInfo(res.data.data.userId)
+  if (userResp.data && userResp.data.data) {
+    // 使用新的状态管理模式
+    authStore.setAuth(res.data.data.token, userResp.data.data)
+  } else {
+    // 如果API没有返回用户信息，只设置token
+    authStore.setAuth(res.data.data.token)
+  }
+
+  ElMessage.success('登录成功，正在跳转...')
+
+  // 根据用户角色跳转
+  const role = userResp.data.data?.role
+  if (role === 'USER') {
+    setTimeout(() => {
+      router.push('/ride')
+    }, 80)
+  } else if (role === 'DRIVER') {
+    setTimeout(() => {
+      router.push('/driver')
+    }, 80)
+  } else {
+    // 如果没有特定角色，跳转到首页
+    setTimeout(() => {
+      router.push('/ride')
+    }, 80)
+  }
+}
+
+const handleRegister = async () => {
+  await register(form.username, form.password)
+  ElMessage.success('注册成功，请登录')
+  toggleMode()
+}
+
+const loading = computed(() =>
+  isLogin.value ? loginLoading.value : registerLoading.value
+)
+
+// 组件暴露的属性
+const LockIcon = Lock
+const UserIcon = User
 </script>
 
 <style scoped>

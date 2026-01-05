@@ -25,7 +25,7 @@ public class MatchingServiceImpl implements MatchingService {
     @Qualifier("ratingAndDistanceStrategy")
     private DriverMatchingStrategy ratingAndDistanceStrategy;
 
-    // 核心：注入模拟的DriverService（依赖其获取司机数据）
+    // 核心：注入DriverService（依赖其获取司机数据）
     @Autowired
     private DriverService driverService;
 

@@ -195,6 +195,7 @@ import { useAuthStore } from '@/stores/auth'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, UploadFile } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import {updateUserInfo} from "@/api/user.ts";
 
 // 类型定义
 interface UserInfo {
@@ -363,7 +364,7 @@ const saveProfile = async () => {
   try {
     saving.value = true
     // 这里应该调用API保存用户资料
-    // await updateUserInfo(userInfo.value)
+    await updateUserInfo(userInfo.value.id || '4',userInfo.value)
     userStore.setUserInfo(userInfo.value)
     ElMessage.success('资料保存成功')
   } catch (error) {

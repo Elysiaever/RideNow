@@ -119,6 +119,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import BaiduMap from "@/components/PassengerMap.vue";
 import { useUserStore } from "@/stores/userStore";
 import request from "@/utils/request";
+import {createRide} from "@/api/ride.ts";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -167,7 +168,7 @@ const submitForm = async () => {
       destLat: form.destination.lat
     });
     
-    if(response.data.success) {
+    if(response.data.code === 200) {
       ElMessage.success("行程创建成功！");
       // 更新当前行程状态
       currentRide.value = {

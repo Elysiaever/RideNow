@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import request from '../utils/request'
 
 interface UserInfo {
-    id?: number
+    id?: string
     username?: string
     nickname?: string
     phone?: string

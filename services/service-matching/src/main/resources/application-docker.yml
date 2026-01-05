@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: service-matching
+  cloud:
+    nacos:
+      server-addr: nacos:8848  # 使用Docker网络中的服务名
+      discovery:
+        username: nacos
+        password: Cf1590753
+  datasource:
+    url: jdbc:postgresql://postgres:5432/ridenow  # 使用Docker网络中的服务名
+    username: postgres
+    password: postgres123
+    driver-class-name: org.postgresql.Driver
+
+server:
+  port: 9001
+
+jwt:
+  secret: "6f9d8c7b-3a2e-4f1a-9b1e-23f9c4d8e7a6#@!XyZ"  # 替换为安全的密钥
+  expire-minutes: 30
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true  # 下划线自动转驼峰
+  global-config:
+    db-config:
+      id-type: auto                     # 主键自增长

@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: service-notification
+  cloud:
+    nacos:
+      server-addr: nacos:8848  # 使用Docker网络中的服务名
+      discovery:
+        username: nacos
+        password: Cf1590753
+
+server:
+  port: 9002

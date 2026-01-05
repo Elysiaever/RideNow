@@ -1,0 +1,248 @@
+version: '3.8'
+
+services:
+  # Nacos 服务发现和配置中心
+  nacos:
+    image: nacos/nacos-server:v2.3.0
+    container_name: nacos
+    environment:
+      - MODE=standalone
+      - NACOS_APPLICATION_PORT=8848
+      - NACOS_SERVER_IP=127.0.0.1
+      - SPRING_DATASOURCE_PLATFORM=postgresql
+      - POSTGRESQL_SERVICE_HOST=postgres
+      - POSTGRESQL_SERVICE_DB_NAME=nacos_config
+      - POSTGRESQL_SERVICE_USER=nacos
+      - POSTGRESQL_SERVICE_PASSWORD=nacos123
+    ports:
+      - "8848:8848"
+    depends_on:
+      - postgres
+    networks:
+      - ridenow-network
+    restart: unless-stopped
+
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: ridenow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/create/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ridenow-network
+    restart: unless-stopped
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ridenow-network
+    restart: unless-stopped
+
+  # RabbitMQ 消息队列
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - ridenow-network
+    restart: unless-stopped
+
+  # Gateway 网关服务
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: gateway
+    ports:
+      - "80:80"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_USERNAME=nacos
+      - SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD=Cf1590753
+    depends_on:
+      - nacos
+    networks:
+      - ridenow-network
+    restart: unless-stopped
+
+  # Driver 服务
+  service-driver:
+    build:
+      context: ./services/service-driver
+      dockerfile: Dockerfile
+    container_name: service-driver
+    ports:
+      - "9000:9000"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_USERNAME=nacos
+      - SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD=Cf1590753
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ridenow
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres123
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - JWT_SECRET=6f9d8c7b-3a2e-4f1a-9b1e-23f9c4d8e7a6#@!XyZ
+    depends_on:
+      - nacos
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - ridenow-network
+    restart: unless-stopped
+
+  # Matching 服务
+  service-matching:
+    build:
+      context: ./services/service-matching
+      dockerfile: Dockerfile
+    container_name: service-matching
+    ports:
+      - "9001:9001"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_USERNAME=nacos
+      - SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD=Cf1590753
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ridenow
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres123
+      - JWT_SECRET=6f9d8c7b-3a2e-4f1a-9b1e-23f9c4d8e7a6#@!XyZ
+    depends_on:
+      - nacos
+      - postgres
+    networks:
+      - ridenow-network
+    restart: unless-stopped
+
+  # Notification 服务
+  service-notification:
+    build:
+      context: ./services/service-notification
+      dockerfile: Dockerfile
+    container_name: service-notification
+    ports:
+      - "9002:9002"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_USERNAME=nacos
+      - SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD=Cf1590753
+    depends_on:
+      - nacos
+    networks:
+      - ridenow-network
+    restart: unless-stopped
+
+  # Payment 服务
+  service-payment:
+    build:
+      context: ./services/service-payment
+      dockerfile: Dockerfile
+    container_name: service-payment
+    ports:
+      - "9003:9003"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_USERNAME=nacos
+      - SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD=Cf1590753
+    depends_on:
+      - nacos
+    networks:
+      - ridenow-network
+    restart: unless-stopped
+
+  # Ride 服务
+  service-ride:
+    build:
+      context: ./services/service-ride
+      dockerfile: Dockerfile
+    container_name: service-ride
+    ports:
+      - "9004:9004"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_USERNAME=nacos
+      - SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD=Cf1590753
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ridenow
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres123
+      - JWT_SECRET=6f9d8c7b-3a2e-4f1a-9b1e-23f9c4d8e7a6#@!XyZ
+    depends_on:
+      - nacos
+      - postgres
+    networks:
+      - ridenow-network
+    restart: unless-stopped
+
+  # User 服务
+  service-user:
+    build:
+      context: ./services/service-user
+      dockerfile: Dockerfile
+    container_name: service-user
+    ports:
+      - "9005:9005"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_NACOS_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_USERNAME=nacos
+      - SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD=Cf1590753
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ridenow
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres123
+      - JWT_SECRET=6f9d8c7b-3a2e-4f1a-9b1e-23f9c4d8e7a6#@!XyZ
+    depends_on:
+      - nacos
+      - postgres
+    networks:
+      - ridenow-network
+    restart: unless-stopped
+
+  # 前端 UI
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: ui
+    ports:
+      - "8080:80"
+    depends_on:
+      - gateway
+    networks:
+      - ridenow-network
+    restart: unless-stopped
+
+networks:
+  ridenow-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:

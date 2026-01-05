@@ -38,15 +38,9 @@ export default defineComponent({
   setup(props,{ emit }) {
     const mapContainer = ref<HTMLDivElement | null>(null);
     let map:any, geocoder:any;
-
-    const iconOrigin = new BMap.Icon("https://maps.gstatic.com/mapfiles/ms2/micons/green-dot.png", new BMap.Size(32,32));
-    const iconDestination = new BMap.Icon("https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png", new BMap.Size(32,32));
-    const iconDriver = new BMap.Icon(
-      "https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png", 
-      new BMap.Size(40,40),
-      { anchor: new BMap.Size(20, 40) }
-    );
-
+    
+    // 将图标定义移到初始化函数中，确保百度地图API已加载
+    let iconOrigin: any, iconDestination: any, iconDriver: any;
     let originMarker:any = null, destMarker:any = null, driverMarkers:any[] = [];
 
     const isDriverDialogOpen = ref(false);
@@ -60,6 +54,8 @@ export default defineComponent({
 
     // 渲染司机Marker - 修复点击事件
     const renderDrivers = (drivers:Driver[])=>{
+      if (!map) return;
+      
       driverMarkers.forEach(m=>{
         if(map && map.getOverlay(m)) map.removeOverlay(m);
       });
@@ -129,6 +125,15 @@ export default defineComponent({
         await loadBaiduMap('45fhg18PIZtRwysqRlZrIQBG0NymF9XR');
         await nextTick();
         
+        // 现在API已加载，初始化图标
+        iconOrigin = new BMap.Icon("https://maps.gstatic.com/mapfiles/ms2/micons/green-dot.png", new BMap.Size(32,32));
+        iconDestination = new BMap.Icon("https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png", new BMap.Size(32,32));
+        iconDriver = new BMap.Icon(
+          "https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png", 
+          new BMap.Size(40,40),
+          { anchor: new BMap.Size(20, 40) }
+        );
+        
         mapContainer.value.style.width = `${window.innerWidth}px`;
         mapContainer.value.style.height = `${window.innerHeight}px`;
         
@@ -193,7 +198,7 @@ export default defineComponent({
       initMap();
     });
 
-    watch(()=>props.drivers, (newDrivers)=>{
+    watch(() => props.drivers, (newDrivers) => {
       if(map) renderDrivers(newDrivers);
     }, { deep:true });
 

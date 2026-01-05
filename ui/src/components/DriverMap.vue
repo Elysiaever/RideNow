@@ -22,10 +22,8 @@ let map: any = null;
 let drivingRoute: any = null;
 let myMarker: any = null;
 
-// 图标资源
-const ICON_DRIVER = "https://maps.gstatic.com/mapfiles/ms2/micons/cabs.png";
-const ICON_START = "https://maps.gstatic.com/mapfiles/ms2/micons/green-dot.png";
-const ICON_END = "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png";
+// 图标资源 - 延迟到地图初始化时创建
+let ICON_DRIVER: any, ICON_START: any, ICON_END: any;
 
 const initMap = async () => {
   if (!mapContainer.value) return;
@@ -35,6 +33,11 @@ const initMap = async () => {
     await loadBaiduMap('45fhg18PIZtRwysqRlZrIQBG0NymF9XR');
     await nextTick();
     
+    // 初始化图标资源
+    ICON_DRIVER = new BMap.Icon("https://maps.gstatic.com/mapfiles/ms2/micons/cabs.png", new BMap.Size(32, 32));
+    ICON_START = new BMap.Icon("https://maps.gstatic.com/mapfiles/ms2/micons/green-dot.png", new BMap.Size(32, 32));
+    ICON_END = new BMap.Icon("https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png", new BMap.Size(32, 32));
+    
     // 1. 初始化地图
     map = new BMap.Map(mapContainer.value);
     const point = new BMap.Point(props.driverLoc.lng, props.driverLoc.lat);
@@ -42,8 +45,7 @@ const initMap = async () => {
     map.enableScrollWheelZoom(true);
 
     // 2. 初始化司机 Marker
-    const icon = new BMap.Icon(ICON_DRIVER, new BMap.Size(32, 32));
-    myMarker = new BMap.Marker(point, { icon: icon });
+    myMarker = new BMap.Marker(point, { icon: ICON_DRIVER });
     map.addOverlay(myMarker);
 
     // 3. 初始状态检查

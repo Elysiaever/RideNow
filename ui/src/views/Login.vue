@@ -178,6 +178,7 @@ const handleLogin = async () => {
 
   ElMessage.success('登录成功，正在跳转...')
 
+  console.log('userResp', userResp)
   // 根据用户角色跳转
   const role = userResp.data.data?.role
   if (role === 'USER') {

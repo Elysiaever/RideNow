@@ -16,19 +16,19 @@
             :ellipsis="false"
             class="el-menu-demo"
           >
-            <el-menu-item index="/ride" v-if="isPassenger">
+            <el-menu-item index="/app/ride" v-if="isPassenger">
               <el-icon><House /></el-icon>
               乘客端
             </el-menu-item>
-            <el-menu-item index="/driver" v-if="isDriver">
+            <el-menu-item index="/app/driver" v-if="isDriver">
               <el-icon><Van /></el-icon>
               司机端
             </el-menu-item>
-            <el-menu-item index="/history" v-if="isLoggedIn">
+            <el-menu-item index="/app/history" v-if="isLoggedIn">
               <el-icon><Document /></el-icon>
               行程历史
             </el-menu-item>
-            <el-menu-item index="/profile" v-if="isLoggedIn">
+            <el-menu-item index="/app/profile" v-if="isLoggedIn">
               <el-icon><User /></el-icon>
               个人资料
             </el-menu-item>
@@ -95,10 +95,10 @@ const isDriver = computed(() => userInfo.value.roles?.includes('DRIVER'))
 // 根据当前路由设置激活的菜单项
 const activeMenu = computed(() => {
   const path = route.path
-  if (path.startsWith('/ride') || path.startsWith('/passenger')) return '/ride'
-  if (path.startsWith('/driver')) return '/driver'
-  if (path.startsWith('/history')) return '/history'
-  if (path.startsWith('/profile')) return '/profile'
+  if (path.startsWith('/app/ride') || path.startsWith('/ride')) return '/app/ride'
+  if (path.startsWith('/app/driver') || path.startsWith('/driver')) return '/app/driver'
+  if (path.startsWith('/app/history') || path.startsWith('/history')) return '/app/history'
+  if (path.startsWith('/app/profile') || path.startsWith('/profile')) return '/app/profile'
   return path
 })
 
@@ -108,7 +108,7 @@ const goToLogin = () => {
 }
 
 const goToProfile = () => {
-  router.push('/profile')
+  router.push('/app/profile')
 }
 
 const logout = () => {

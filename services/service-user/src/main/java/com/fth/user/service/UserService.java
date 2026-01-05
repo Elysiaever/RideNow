@@ -19,4 +19,10 @@ public interface UserService extends IService<User> {
     void updateUser(User user);
     //查询用户
     User getUserById(Long userId);
+    
+    // 更新用户信息
+    void updateUserInfo(Long userId, java.util.Map<String, Object> userInfo);
+    
+    // 修改密码
+    void changePassword(Long userId, String oldPassword, String newPassword);
 }

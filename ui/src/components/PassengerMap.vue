@@ -22,6 +22,7 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted, watch, nextTick } from "vue";
 import { ElDialog, ElMessage } from "element-plus";
+import { loadBaiduMap } from '@/utils/baiduMapLoader';
 declare const BMap: any;
 
 interface Driver { id:string; name:string; phone:string; plateNumber?:string; lng:number; lat:number; }
@@ -123,69 +124,73 @@ export default defineComponent({
     const initMap = async()=>{
       if(!mapContainer.value) return;
       
-      await nextTick();
-      
-      mapContainer.value.style.width = `${window.innerWidth}px`;
-      mapContainer.value.style.height = `${window.innerHeight}px`;
-      
-      // 创建地图实例，禁用默认的双击缩放等可能干扰的事件
-      map = new BMap.Map(mapContainer.value, { 
-        enableMapClick: true,
-        enableDoubleClickZoom: false // 禁用双击缩放，减少事件冲突
-      });
-      map.centerAndZoom(new BMap.Point(116.404,39.915),12);
-      map.enableScrollWheelZoom(true);
-      geocoder = new BMap.Geocoder();
-
-      // 地图点击事件 - 添加更严格的条件判断
-      map.addEventListener("click", (e:any)=>{
-        // 如果弹窗打开，则不处理地图点击
-        if(isDriverDialogOpen.value) return;
+      try {
+        // 等待百度地图API加载完成
+        await loadBaiduMap('45fhg18PIZtRwysqRlZrIQBG0NymF9XR');
+        await nextTick();
         
-        // 如果点击的是覆盖物，且不是起点/终点标记，则不处理
-        if(e.overlay) {
-          const isDriverMarker = driverMarkers.includes(e.overlay);
-          const isOriginMarker = e.overlay === originMarker;
-          const isDestMarker = e.overlay === destMarker;
-          
-          // 只有点击空白地图区域或起点终点标记时才执行选点
-          if(!isOriginMarker && !isDestMarker) return;
-        }
+        mapContainer.value.style.width = `${window.innerWidth}px`;
+        mapContainer.value.style.height = `${window.innerHeight}px`;
         
-        const point = e.point;
-        geocoder.getLocation(point, (res:any)=>{
-          const address = res?.address || "未知地点";
-          emit("pick-point", { lng:point.lng, lat:point.lat, address, mode:props.pickMode });
+        // 创建地图实例，禁用默认的双击缩放等可能干扰的事件
+        map = new BMap.Map(mapContainer.value, { 
+          enableMapClick: true,
+          enableDoubleClickZoom: false // 禁用双击缩放，减少事件冲突
         });
-        
-        if(props.pickMode==="origin"){
-          if(originMarker) map.removeOverlay(originMarker);
-          originMarker = new BMap.Marker(point, { icon:iconOrigin, zIndex: 100 });
-          map.addOverlay(originMarker);
-        }else{
-          if(destMarker) map.removeOverlay(destMarker);
-          destMarker = new BMap.Marker(point, { icon:iconDestination, zIndex: 100 });
-          map.addOverlay(destMarker);
-        }
-      });
+        map.centerAndZoom(new BMap.Point(116.404,39.915),12);
+        map.enableScrollWheelZoom(true);
+        geocoder = new BMap.Geocoder();
 
-      // 初始渲染司机Marker
-      renderDrivers(props.drivers);
+        // 地图点击事件 - 添加更严格的条件判断
+        map.addEventListener("click", (e:any)=>{
+          // 如果弹窗打开，则不处理地图点击
+          if(isDriverDialogOpen.value) return;
+          
+          // 如果点击的是覆盖物，且不是起点/终点标记，则不处理
+          if(e.overlay) {
+            const isDriverMarker = driverMarkers.includes(e.overlay);
+            const isOriginMarker = e.overlay === originMarker;
+            const isDestMarker = e.overlay === destMarker;
+            
+            // 只有点击空白地图区域或起点终点标记时才执行选点
+            if(!isOriginMarker && !isDestMarker) return;
+          }
+          
+          const point = e.point;
+          geocoder.getLocation(point, (res:any)=>{
+            const address = res?.address || "未知地点";
+            emit("pick-point", { lng:point.lng, lat:point.lat, address, mode:props.pickMode });
+          });
+          
+          if(props.pickMode==="origin"){
+            if(originMarker) map.removeOverlay(originMarker);
+            originMarker = new BMap.Marker(point, { icon:iconOrigin, zIndex: 100 });
+            map.addOverlay(originMarker);
+          }else{
+            if(destMarker) map.removeOverlay(destMarker);
+            destMarker = new BMap.Marker(point, { icon:iconDestination, zIndex: 100 });
+            map.addOverlay(destMarker);
+          }
+        });
 
-      window.addEventListener("resize", ()=>{
-        if(mapContainer.value && map){
-          mapContainer.value.style.width = `${window.innerWidth}px`;
-          mapContainer.value.style.height = `${window.innerHeight}px`;
-          map.resize();
-        }
-      });
+        // 初始渲染司机Marker
+        renderDrivers(props.drivers);
+
+        window.addEventListener("resize", ()=>{
+          if(mapContainer.value && map){
+            mapContainer.value.style.width = `${window.innerWidth}px`;
+            mapContainer.value.style.height = `${window.innerHeight}px`;
+            map.resize();
+          }
+        });
+      } catch (error) {
+        console.error('百度地图API加载失败:', error);
+        ElMessage.error('地图加载失败，请检查网络连接');
+      }
     };
 
     onMounted(()=>{
-      initMap().catch(err=>{
-        ElMessage.error("地图初始化失败："+err);
-        console.error("地图初始化错误：", err);
-      });
+      initMap();
     });
 
     watch(()=>props.drivers, (newDrivers)=>{

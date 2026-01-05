@@ -11,6 +11,7 @@ import com.fth.common.service.RedisService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class DriverServiceImpl implements DriverService {
@@ -27,7 +28,7 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public List<?> searchNearby(Double lng, Double lat, Double radius){
+    public List<Map<String, Object>> searchNearby(Double lng, Double lat, Double radius){
         return redisService.searchDriverNearby(lng, lat, radius);
     }
 

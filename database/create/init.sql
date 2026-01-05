@@ -1,18 +1,33 @@
+DROP TABLE IF EXISTS t_user;
 CREATE TABLE t_user (
     id              BIGSERIAL PRIMARY KEY,
     username        VARCHAR(50) NOT NULL UNIQUE,
     password        VARCHAR(255) NOT NULL,
     phone           VARCHAR(20) UNIQUE,
+    nickname        VARCHAR(50),
+    email           VARCHAR(100),
+    avatar          VARCHAR(500),
+    gender          VARCHAR(10),
+    birthday        DATE,
     created_at      TIMESTAMP DEFAULT NOW(),
     updated_at      TIMESTAMP DEFAULT NOW()
 );
 
-C                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  OMMENT ON TABLE t_user IS '乘客用户表';
+-- 将 birthday 字段从 date 类型改为 VARCHAR(800)
+ALTER TABLE t_user
+    ALTER COLUMN avatar TYPE VARCHAR(800);
 
+
+COMMENT ON TABLE t_user IS '乘客用户表';
 COMMENT ON COLUMN t_user.id            IS '主键 ID';
 COMMENT ON COLUMN t_user.username      IS '用户名';
-COMMENT ON COLUMN t_user.password_hash IS '密码（加密后）';
+COMMENT ON COLUMN t_user.password      IS '密码（加密后）';
 COMMENT ON COLUMN t_user.phone         IS '手机号';
+COMMENT ON COLUMN t_user.nickname      IS '昵称';
+COMMENT ON COLUMN t_user.email         IS '邮箱';
+COMMENT ON COLUMN t_user.avatar        IS '头像';
+COMMENT ON COLUMN t_user.gender        IS '性别';
+COMMENT ON COLUMN t_user.birthday      IS '生日';
 COMMENT ON COLUMN t_user.created_at    IS '创建时间';
 COMMENT ON COLUMN t_user.updated_at    IS '更新时间';
 

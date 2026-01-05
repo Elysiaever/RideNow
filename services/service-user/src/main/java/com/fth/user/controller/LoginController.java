@@ -57,8 +57,8 @@ public class LoginController {
     }
 
     @GetMapping("/info")
-    public Response<UserInfo> getUserById(@RequestParam Long userId) {
-        User user = userService.getUserById(userId);
+    public Response<UserInfo> getUserById(@RequestParam String userId) {
+        User user = userService.getUserById(Long.valueOf(userId));
         if (user == null) {
             return Response.error(404, "用户不存在");
         }
@@ -66,9 +66,16 @@ public class LoginController {
         userInfo.setId(user.getId());
         userInfo.setUsername(user.getUsername());
         userInfo.setPhone(user.getPhone());
-
-        String role = driverFeignClient.isDriver(userId) ? "DRIVER" : "USER";
-        userInfo.setRole(role);
+        userInfo.setRole(driverFeignClient.isDriver(user.getId()) ? "DRIVER" : "USER");
+        
+        // 设置其他用户信息字段
+        userInfo.setNickname(user.getNickname());
+        userInfo.setEmail(user.getEmail());
+        
+        // 设置角色数组
+        String role = driverFeignClient.isDriver(user.getId()) ? "DRIVER" : "USER";
+        userInfo.setRoles(new String[]{role});
+        
         return Response.success(userInfo);
     }
 }

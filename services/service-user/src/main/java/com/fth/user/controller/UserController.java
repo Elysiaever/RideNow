@@ -1,44 +1,32 @@
 package com.fth.user.controller;
 
-import com.fth.user.domain.model.User;
+import com.fth.common.api.Response;
+import com.fth.user.domain.dto.UserInfo;
 import com.fth.user.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
+@RequiredArgsConstructor
 public class UserController {
-   @Autowired
-    private UserService userService;
 
-   //增加用户
-    @PutMapping("/add")
-    public ResponseEntity<String> addUser(@RequestBody User user) {
-        userService.addUser(user);
-        return ResponseEntity.ok("User added");
+    private final UserService userService;
+
+    @PostMapping("/update/{userId}")
+    public Response<Void> updateUserInfo(@PathVariable String userId, @RequestBody Map<String, Object> userInfo) {
+        userService.updateUserInfo(Long.valueOf(userId), userInfo);
+        return Response.success(null);
     }
 
-    //删除用户
-    @PutMapping("/delete")
-    public ResponseEntity<String> deleteUser(Long userId) {
-        userService.deleteUser(userId);
-        return ResponseEntity.ok("User deleted");
-    }
-
-    //修改用户信息
-    @PutMapping("/update")
-    public ResponseEntity<String> updateUser(@RequestBody User user) {
-        userService.updateUser(user);
-        return ResponseEntity.ok("User updated");
-    }
-
-    //查询用户信息
-    @PutMapping("/get")
-    public ResponseEntity<User> getUser(Long userId) {
-        return ResponseEntity.ok(userService.getUserById(userId));
+    @PostMapping("/change-password/{userId}")
+    public Response<Void> changePassword(@PathVariable String userId, @RequestBody Map<String, String> passwordData) {
+        String oldPassword = passwordData.get("oldPassword");
+        String newPassword = passwordData.get("newPassword");
+        userService.changePassword(Long.valueOf(userId), oldPassword, newPassword);
+        return Response.success(null);
     }
 }

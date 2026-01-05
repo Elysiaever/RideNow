@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -30,4 +32,20 @@ public class User {
 
     @TableField("updated_at")
     private LocalDateTime updatedAt; // 更新时间
+    
+    @TableField("nickname")
+    private String nickname; // 昵称
+    
+    @TableField("email")
+    private String email; // 邮箱
+    
+    @TableField("avatar")
+    private String avatar; // 头像
+    
+    @TableField("gender")
+    private String gender; // 性别
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @TableField("birthday")
+    private LocalDate birthday; // 生日
 }

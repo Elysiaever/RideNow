@@ -6,6 +6,8 @@
 import { onMounted, watch, ref, onUnmounted, nextTick } from 'vue';
 import { DriverStatus, type OrderInfo } from '../types';
 
+import { loadBaiduMap } from '@/utils/baiduMapLoader';
+
 // 声明 BMap，防止 TS 报错
 declare const BMap: any;
 
@@ -27,21 +29,28 @@ const ICON_END = "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png";
 
 const initMap = async () => {
   if (!mapContainer.value) return;
-  await nextTick();
+  
+  // 等待百度地图API加载完成
+  try {
+    await loadBaiduMap('45fhg18PIZtRwysqRlZrIQBG0NymF9XR');
+    await nextTick();
+    
+    // 1. 初始化地图
+    map = new BMap.Map(mapContainer.value);
+    const point = new BMap.Point(props.driverLoc.lng, props.driverLoc.lat);
+    map.centerAndZoom(point, 15);
+    map.enableScrollWheelZoom(true);
 
-  // 1. 初始化地图
-  map = new BMap.Map(mapContainer.value);
-  const point = new BMap.Point(props.driverLoc.lng, props.driverLoc.lat);
-  map.centerAndZoom(point, 15);
-  map.enableScrollWheelZoom(true);
+    // 2. 初始化司机 Marker
+    const icon = new BMap.Icon(ICON_DRIVER, new BMap.Size(32, 32));
+    myMarker = new BMap.Marker(point, { icon: icon });
+    map.addOverlay(myMarker);
 
-  // 2. 初始化司机 Marker
-  const icon = new BMap.Icon(ICON_DRIVER, new BMap.Size(32, 32));
-  myMarker = new BMap.Marker(point, { icon: icon });
-  map.addOverlay(myMarker);
-
-  // 3. 初始状态检查
-  updateMapState();
+    // 3. 初始状态检查
+    updateMapState();
+  } catch (error) {
+    console.error('百度地图API加载失败:', error);
+  }
 };
 
 // 渲染路径规划

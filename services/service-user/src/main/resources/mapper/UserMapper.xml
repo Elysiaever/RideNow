@@ -11,11 +11,16 @@
         <result column="phone" property="phone" jdbcType="VARCHAR"/>
         <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
         <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="nickname" property="nickname" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="avatar" property="avatar" jdbcType="VARCHAR"/>
+        <result column="gender" property="gender" jdbcType="VARCHAR"/>
+        <result column="birthday" property="birthday" jdbcType="DATE"/>
     </resultMap>
 
     <!-- 公共字段列表：复用查询/插入字段 -->
     <sql id="Base_Column_List">
-        id, username, password, phone, created_at, updated_at
+        id, username, password, phone, created_at, updated_at, nickname, email, avatar, gender, birthday
     </sql>
 
     <!-- 1. 根据用户名查询用户（返回 Optional<User>） -->

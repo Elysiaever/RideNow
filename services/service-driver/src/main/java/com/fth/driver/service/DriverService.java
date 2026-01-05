@@ -5,11 +5,12 @@ import com.fth.driver.domain.model.Driver;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 public interface DriverService {
 
     void updateLocation(Long driverId, Double lng, Double lat);
-    List<?> searchNearby(Double lng, Double lat, Double radius);
+    List<Map<String, Object>> searchNearby(Double lng, Double lat, Double radius);
 
     //增加司机
     void addDriver(Driver driver);

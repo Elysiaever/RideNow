@@ -6,6 +6,7 @@ import com.fth.driver.domain.dto.LocationUpdateDto;
 import com.fth.driver.domain.dto.SearchDriverDto;
 import com.fth.driver.domain.dto.mq.DriverLocationMqMsg;
 import com.fth.driver.domain.model.Driver;
+import com.fth.driver.filter.DriverLocationFilter;
 import com.fth.driver.service.DriverService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -36,6 +37,10 @@ public class DriverController {
 
     @Autowired
     private DriverService driverService;
+
+    // 注入位置过滤器
+    @Autowired
+    private DriverLocationFilter locationFilter;
 
     // 1. 注入RabbitMQ 消息发送模板（生产者核心：用于发送消息到RabbitMQ）
     @Autowired
@@ -253,13 +258,14 @@ public class DriverController {
                 String timestampKey = RedisConstant.DRIVER_GEO_KEY + ":timestamp";
                 Object lastTimestampObj = stringRedisTemplate.opsForHash().get(timestampKey, dto.getDriverId().toString());
                 long lastTimestamp = lastTimestampObj != null ? Long.parseLong(lastTimestampObj.toString()) : 0;
+                long timeDiff = now - lastTimestamp;
 
-                // --- 判断是否强制写入 ---
-                if (distance < 20 && (now - lastTimestamp <= 10000)) {
-                    log.info("距离小于20米且10秒内已有写入，忽略此次更新，不发送到RabbitMQ");
+                // --- 使用过滤器判断是否忽略更新 ---
+                if (locationFilter.shouldIgnoreUpdate(distance, timeDiff)) {
+                    log.info("距离和时间均未达到阈值，忽略此次更新，不发送到RabbitMQ");
                     Map<String, Object> result = new HashMap<>();
                     result.put("success", true);
-                    result.put("message", "位置变化小于20米，忽略更新");
+                    result.put("message", "位置变化不足，忽略更新");
                     result.put("driverId", dto.getDriverId());
                     result.put("longitude", dto.getLng());
                     result.put("latitude", dto.getLat());

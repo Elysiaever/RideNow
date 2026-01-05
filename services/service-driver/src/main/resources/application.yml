@@ -46,3 +46,10 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto                     # 主键自增长
+
+# 司机位置更新过滤配置
+driver:
+  location:
+    filter:
+      distance-threshold: 20    # 距离阈值（米）
+      time-threshold: 10000     # 时间阈值（毫秒，10秒）

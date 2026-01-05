@@ -7,6 +7,8 @@ export enum DriverStatus {
 
 export interface OrderInfo {
   id: string;
+  passengerName: string;      // 乘客姓名
+  passengerPhone: string;     // 乘客电话
   passengerLoc: { lng: number; lat: number; address: string }; // 乘客位置
   destLoc: { lng: number; lat: number; address: string };      // 目的地
   startTime?: number; // 行程开始时间

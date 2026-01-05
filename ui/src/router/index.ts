@@ -15,25 +15,25 @@ const router = createRouter({
       component: MainLayout,
       children: [
         {
-          path: '/ride',
+          path: 'ride',  // 修改：改为相对路径
           name: 'Ride',
           component: () => import('@/views/RideTest.vue'),
           meta: { requiresAuth: true }
         },
         {
-          path: '/driver',
+          path: 'driver',  // 修改：改为相对路径
           name: 'Driver',
           component: () => import('@/views/DriverWorkBench.vue'),
           meta: { requiresAuth: true }
         },
         {
-          path: '/history',
+          path: 'history',  // 修改：改为相对路径
           name: 'History',
           component: () => import('@/views/RideHistory.vue'),
           meta: { requiresAuth: true }
         },
         {
-          path: '/profile',
+          path: 'profile',  // 修改：改为相对路径
           name: 'Profile',
           component: () => import('@/views/Profile.vue'),
           meta: { requiresAuth: true }

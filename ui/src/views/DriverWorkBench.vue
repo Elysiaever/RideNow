@@ -192,7 +192,7 @@ const driverLocation = ref({ lng: 116.404, lat: 39.915 });
 
 // 司机信息
 const driverInfo = ref({
-  name: userStore.userInfo.nickname || userStore.userInfo.username || '张司机',
+  name: userStore.userInfo.nickname || userStore.userInfo.username || '张司机' || undefined,
   rating: 4.9,
   totalOrders: 128,
   totalIncome: 12800

@@ -178,21 +178,20 @@ const handleLogin = async () => {
 
   ElMessage.success('登录成功，正在跳转...')
 
-  console.log('userResp', userResp)
   // 根据用户角色跳转
   const role = userResp.data.data?.role
   if (role === 'USER') {
     setTimeout(() => {
-      router.push('/ride')
+      router.push('/app/ride')
     }, 80)
   } else if (role === 'DRIVER') {
     setTimeout(() => {
-      router.push('/driver')
+      router.push('/app/driver')
     }, 80)
   } else {
     // 如果没有特定角色，跳转到首页
     setTimeout(() => {
-      router.push('/ride')
+      router.push('/app/ride')
     }, 80)
   }
 }
